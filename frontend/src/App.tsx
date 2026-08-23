@@ -84,10 +84,13 @@ export default function App() {
   }
 
   return (
+    <>
+    <div className="bg" aria-hidden="true" />
+    <div className="orb" aria-hidden="true" />
     <div className="wrap">
       <header className="masthead">
         <div className="kicker">Razorpay AI Buildathon 2026 · Track 01</div>
-        <h1 className="brand">BAZAAR</h1>
+        <h1 className="brand"><span className="word">BAZAAR</span><span className="bdot" aria-hidden="true" /></h1>
         <p className="tagline">
           Adversarial infrastructure for autonomous commerce. AI agents can transact - BAZAAR
           measures whether they <i>should be allowed to</i>.
@@ -96,7 +99,13 @@ export default function App() {
           <b>LLMs propose. Policies constrain. A deterministic verifier authorizes.</b> Nothing
           probabilistic can widen authority; no path settles above the signed cap.
         </div>
-        <div className="small muted" style={{ marginTop: 8 }}>
+        <div className="statstrip">
+          <span className="chip good"><span className="d" /><span className="v">100%</span> <span className="l">attacks blocked</span></span>
+          <span className="chip good"><span className="d" /><span className="v">0%</span> <span className="l">false-block on legit</span></span>
+          <span className="chip good"><span className="d" /><span className="v">0</span> <span className="l">fuzzer violations</span></span>
+          <span className="chip warm"><span className="d" /><span className="v">+7.7%</span> <span className="l">order value, all cleared</span></span>
+        </div>
+        <div className="small faint metaline" style={{ marginTop: 14 }}>
           Razorpay settlement: <code>{health || "…"}</code>
         </div>
       </header>
@@ -118,6 +127,7 @@ export default function App() {
       {tab === "redteam" && <RedTeamScreen setLast={setLast} setErr={setErr} />}
       {tab === "benchmark" && <BenchmarkScreen setErr={setErr} />}
     </div>
+    </>
   );
 }
 
