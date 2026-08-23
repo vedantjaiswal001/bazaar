@@ -52,7 +52,20 @@ ran successfully. Anything not yet run says so.
   ALLOW (11/11 checks) → receipt verifies → audit chain intact. Live attacks
   returned MANDATE_LIMIT_EXCEEDED, CATEGORY_OUTSIDE_MANDATE, UNTRUSTED_INSTRUCTION,
   NONCE_REPLAY. `make test` → 44 passed.
-### ⬜ Phase 5 — Red-team harness + benchmark + revenue axis
+### ✅ Phase 5 — Red-team harness + benchmark + revenue axis
+- redteam/attacks.py: labeled generators for all 9 attack classes (incl. catalog
+  prompt-injection). redteam/harness.py: evaluation with vocabularies kept
+  separate (gate correctness vs risk precision/recall). benchmarks/{datasets,runner}.py.
+- **Checkpoint (`make benchmark`, actual run):**
+  - dataset 144 adversarial + 400 legit; held-out 72 + 200.
+  - adversarial block rate 100% (correct reason code 100%), per-class all 100%.
+  - false-block rate 0% (incl. boundary cases ₹4,950 / ₹4,999 / exactly-cap).
+  - held-out block rate 100%, false-block 0%.
+  - fuzzer 0 spend-cap violations over 20,000 states.
+  - AOV uplift +7.72% from bounded upsell; 100% of upsold orders cleared the gate.
+  - risk classifier reported SEPARATELY: precision 1.000 (no false alarms).
+  - escapes: none. Scoreboard written to benchmarks/out/scoreboard.json.
+- `make test` → 51 passed.
 ### ⬜ Phase 6 — Frontend + demo polish
 
 ## Known constraints

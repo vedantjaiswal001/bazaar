@@ -12,6 +12,9 @@ Everything here runs against a throwaway in-memory-style DB file; no network.
 from __future__ import annotations
 
 import copy
+
+# Reuse the test factory for realistic objects.
+import sys
 import tempfile
 from pathlib import Path
 
@@ -21,11 +24,13 @@ from bazaar.ledger.audit_log import append_event, verify_chain
 from bazaar.receipt.trust_receipt import build_receipt, verify_receipt_json
 from bazaar.verifier.gate import authorize
 
-# Reuse the test factory for realistic objects.
-import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
-from factory import make_keypair, make_record, make_signed_mandate, make_txn  # noqa: E402
+from factory import (
+    make_keypair,
+    make_record,
+    make_signed_mandate,
+    make_txn,
+)
 
 
 def line(c: str = "-") -> None:

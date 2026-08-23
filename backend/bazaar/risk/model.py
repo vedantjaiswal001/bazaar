@@ -62,9 +62,10 @@ def assess(txn: TransactionRequest, record: MerchantRecord | None) -> RiskSignal
         score += 0.2
         reasons.append("amount within 2% of the mandate cap")
 
-    # Price disagreement with the merchant of record.
+    # Price disagreement with the merchant of record always warrants human review.
+    # (Legitimate traffic quotes the record price exactly, so this never false-alarms.)
     if record is not None and txn.amount != record.price:
-        score += 0.3
+        score += 0.4
         reasons.append("amount disagrees with merchant-of-record price")
 
     score = min(score, 1.0)

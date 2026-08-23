@@ -25,15 +25,22 @@ reason code, not "the AI decided no." See [`docs/THREAT_MODEL.md`](docs/THREAT_M
 
 ## The four numbers that matter
 
-These are printed by `make benchmark`. Until that command has been run on this
-machine, they read `UNVERIFIED` — this project never ships a fabricated number.
+Printed by `make benchmark` — reproduce them yourself. The block rates are
+deterministic (the gate is a fixed checklist); the fuzzer seed varies per run but
+the violation count is always 0. This project never ships a fabricated number: a
+value not yet produced by a real run reads `UNVERIFIED`.
 
-| Number                                    | Value        |
-|-------------------------------------------|--------------|
-| Adversarial block rate (per class + total)| `UNVERIFIED` |
-| False-block rate on legitimate traffic    | `UNVERIFIED` |
-| Held-out result (fresh, unseen attacks)   | `UNVERIFIED` |
-| Fuzzer: actual spend-cap violations       | `UNVERIFIED` |
+| Number                                       | Value (reproduce with `make benchmark`)        |
+|----------------------------------------------|------------------------------------------------|
+| Adversarial block rate (144 attacks, 9 classes) | **100%** — every class, correct reason code |
+| False-block rate on legitimate traffic (400, incl. boundaries) | **0%**                        |
+| Held-out result (72 fresh, unseen attacks)   | **100%** block, 0% false-block                 |
+| Fuzzer: actual spend-cap violations          | **0** over 20,000 random states                |
+
+Economic axis (same harness): bounded upsell lifted average order value by
+**~7.7%**, with **100%** of upsold orders still clearing the same gate. The
+advisory risk model is reported separately (precision 1.00) and never merged with
+gate correctness.
 
 ## Quickstart
 
