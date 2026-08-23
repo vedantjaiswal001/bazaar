@@ -35,7 +35,7 @@ class Settings:
     mandate_ttl_seconds: int
 
     @staticmethod
-    def load() -> "Settings":
+    def load() -> Settings:
         return Settings(
             db_path=os.environ.get("BAZAAR_DB_PATH", str(DEFAULT_DB_PATH)),
             razorpay_key_id=os.environ.get("RAZORPAY_KEY_ID"),
