@@ -42,6 +42,24 @@ Economic axis (same harness): bounded upsell lifted average order value by
 advisory risk model is reported separately (precision 1.00) and never merged with
 gate correctness.
 
+## Demo screens
+
+Six screens (React + TypeScript + Vite), each driving the real backend — nothing mocked.
+
+**Bounded negotiation → deterministic settlement** (the agreed price sits between the
+seller's floor and the buyer's cap):
+
+![Transaction screen](docs/screens/03_transaction.png)
+
+**Red-team harness** — fire all nine attack classes live; each returns its specific reason code:
+
+![Red team screen](docs/screens/07_redteam.png)
+
+**Benchmark scoreboard** — the four numbers, produced by `make benchmark`, with the advisory
+risk model reported separately:
+
+![Benchmark screen](docs/screens/08_benchmark.png)
+
 ## Quickstart
 
 ```bash

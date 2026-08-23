@@ -66,7 +66,14 @@ ran successfully. Anything not yet run says so.
   - risk classifier reported SEPARATELY: precision 1.000 (no false alarms).
   - escapes: none. Scoreboard written to benchmarks/out/scoreboard.json.
 - `make test` → 51 passed.
-### ⬜ Phase 6 — Frontend + demo polish
+### ✅ Phase 6 — Frontend + demo polish
+- FastAPI backend (api/app.py) + React/TS/Vite six-screen UI (Intent, Transaction,
+  Verifier, Trust Receipt, Red Team, Benchmark). `make run` + `make web`.
+- **Checkpoint:** `make web-build` type-checks + builds clean; live smoke test of
+  uvicorn confirmed happy-path ALLOW and budget-attack BLOCK over HTTP; Playwright
+  screenshots of all six screens captured to docs/screens/. Every screen drives
+  the real gate/receipts/benchmark — nothing mocked.
+- 66 tests total (incl. API integration) all green.
 
 ## Known constraints
 - Razorpay network settlement can only be validated once test keys are provided

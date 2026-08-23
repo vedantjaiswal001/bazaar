@@ -55,6 +55,18 @@ benchmark: ## Regenerate datasets, run gate + fuzzer, print the scoreboard
 run: ## Start the FastAPI backend on :8000
 	$(PY) -m uvicorn bazaar.api.app:app --reload --port 8000
 
+.PHONY: web-install
+web-install: ## Install frontend dependencies
+	cd frontend && npm install
+
+.PHONY: web
+web: ## Start the frontend dev server on :5173 (proxies /api -> :8000)
+	cd frontend && npm run dev
+
+.PHONY: web-build
+web-build: ## Type-check and build the frontend
+	cd frontend && npm run build
+
 .PHONY: demo
 demo: ## Run the scripted end-to-end demo (no Razorpay network needed)
 	$(PY) scripts/demo.py
