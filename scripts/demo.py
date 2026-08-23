@@ -50,7 +50,7 @@ def main() -> int:
         repo.register_agent(conn, "buyer-1", "Buyer One", "buyer")
         svc = AuthorizationService(conn)
 
-        print("BAZAAR — end-to-end demo")
+        print("BAZAAR - end-to-end demo")
         hr("=")
 
         # ---- 1. intent -> confirmation -> sign ----
@@ -74,7 +74,7 @@ def main() -> int:
             label = step.actor.upper()
             price = "" if step.price == 0 else f"  {rupees(step.price)}"
             print(f"     [{label:>16}]{price}   {step.note}")
-        print(f"   ✓ agreed {rupees(outcome.agreed_price)} — within walls: {outcome.within_walls()}"
+        print(f"   ✓ agreed {rupees(outcome.agreed_price)} - within walls: {outcome.within_walls()}"
               f"  (upsold: {outcome.upsold})")
         hr()
 
@@ -88,7 +88,7 @@ def main() -> int:
         print(f"   DECISION: {out.result.decision} ({out.result.reason})   "
               f"risk_score={out.risk.score} -> effective {out.effective_decision}")
         print(f"   Trust Receipt {out.receipt.receipt_id} verifies: {out.receipt.verify()}")
-        print("   [Razorpay test-mode settlement: PENDING — wired in Phase 2 with test keys]")
+        print("   [Razorpay test-mode settlement: PENDING - wired in Phase 2 with test keys]")
         hr()
 
         # ---- 4. a few live attacks -> reason codes ----
@@ -120,7 +120,7 @@ def main() -> int:
         chain = verify_chain(conn)
         print(f"5. AUDIT CHAIN: {chain.length} entries, intact={chain.ok}")
         hr("=")
-        print("✓ demo complete — every decision above was produced by code, live.")
+        print("✓ demo complete - every decision above was produced by code, live.")
         conn.close()
     return 0
 

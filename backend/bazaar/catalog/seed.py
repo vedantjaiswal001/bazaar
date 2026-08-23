@@ -1,4 +1,4 @@
-"""Deterministic demo catalog — the merchant of record for the demo & benchmark.
+"""Deterministic demo catalog - the merchant of record for the demo & benchmark.
 
 Prices are paise. The set is chosen so each attack class has something to bite:
 a base item, an in-cap upsell, an off-mandate category, an over-cap luxury item,
@@ -24,7 +24,7 @@ DEMO_CATALOG: list[MerchantRecord] = [
     MerchantRecord(
         sku="SKU-WATCH-9", merchant_id=DEFAULT_MERCHANT, title="Smartwatch Series 9",
         category="wearables", price=449_900, floor_price=420_000, return_policy_days=15,
-        description="A smartwatch — deliberately OUTSIDE a footwear-only mandate.",
+        description="A smartwatch - deliberately OUTSIDE a footwear-only mandate.",
     ),
     MerchantRecord(
         sku="SKU-SHOE-LUX", merchant_id=DEFAULT_MERCHANT, title="Luxury Leather Boots",

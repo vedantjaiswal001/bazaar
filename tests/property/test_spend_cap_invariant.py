@@ -1,6 +1,6 @@
 """Property: the gate never authorizes an amount above the signed mandate cap.
 
-This is invariant #3 — the primary property the fuzzer targets. Hypothesis throws
+This is invariant #3 - the primary property the fuzzer targets. Hypothesis throws
 thousands of randomized states (random caps, amounts, prices, categories,
 provenance, clocks, and DB flags) at the pure gate and asserts:
 
@@ -33,7 +33,7 @@ def scenario(draw):
     cap = draw(st.integers(min_value=1, max_value=10_000_000))
     # "coherent" scenarios engineer the ALLOW path to be reachable and push the
     # amount right up against the cap boundary, so the invariant is tested where
-    # it actually bites — not vacuously on states that block on price first.
+    # it actually bites - not vacuously on states that block on price first.
     coherent = draw(st.booleans())
     if coherent:
         price = draw(st.integers(min_value=0, max_value=int(cap * 1.3) + 1))

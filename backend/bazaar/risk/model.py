@@ -3,7 +3,7 @@
 This is the probabilistic layer. It emits a *signal*, nothing more. By
 construction it can only push a decision toward MORE scrutiny
 (NORMAL -> REVIEW -> BLOCK). It has no path to approve a payment or raise a
-limit — that is the verifier's job alone.
+limit - that is the verifier's job alone.
 
 Its accuracy is measured separately (precision / recall / F1) and is never
 merged with the deterministic gate's correctness. See docs/EVAL.md.

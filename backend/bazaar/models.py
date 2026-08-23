@@ -40,7 +40,7 @@ class PriceSource(str, Enum):
 
     Only MERCHANT_RECORD is trusted. Anything else means the value was derived
     from something an adversary (or injected text) could influence, and the gate
-    rejects it outright — this is the prompt-injection defense.
+    rejects it outright - this is the prompt-injection defense.
     """
 
     MERCHANT_RECORD = "merchant_record"  # read from the merchant of record (trusted)

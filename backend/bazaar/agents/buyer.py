@@ -4,7 +4,7 @@ and builds transactions that source money-fields from the merchant of record onl
 The buyer never invents a price or a category for authorization: `build_transaction`
 takes an authoritative offer (from the merchant of record) and marks the money-field
 provenance as MERCHANT_RECORD. Anything an adversary injects into catalog text is
-never used as a money-field — that is enforced at the gate, but the honest agent
+never used as a money-field - that is enforced at the gate, but the honest agent
 does not even try.
 """
 from __future__ import annotations
@@ -85,7 +85,7 @@ class BuyerAgent:
     def confirm_and_sign(self, unsigned: Mandate) -> Mandate:
         """The confirmation gate: only a confirmable, human-approved draft is signed.
 
-        This closes the most-attackable seam — a bad parse can never become a
+        This closes the most-attackable seam - a bad parse can never become a
         signed, 'valid' boundary, because signing happens only after confirmation.
         """
         if unsigned.max_amount <= 0 or not unsigned.allowed_categories:

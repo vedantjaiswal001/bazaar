@@ -4,7 +4,7 @@ The gate authorizes; settlement is a separate step that creates a real Razorpay
 Test Mode order. Two safety properties:
 
   * Idempotent: if a transaction already has an order, we return it instead of
-    creating a second one — a retry can never produce a double charge.
+    creating a second one - a retry can never produce a double charge.
   * Ambiguous = not paid: creating the order sets status 'pending_settlement'.
     The transaction becomes 'settled' only via a verified webhook (webhooks.py)
     or a reconcile against Razorpay, which is the source of truth.
@@ -86,4 +86,4 @@ def reconcile(conn: sqlite3.Connection, txn_id: str, client: RazorpayClient) -> 
                                     row["amount"], "reconciled from Razorpay as captured")
     # Still not captured -> remain NOT PAID. Never re-charge.
     return SettlementResult("order_exists", txn_id, row["razorpay_order_id"], row["amount"],
-                            "no captured payment yet — remains not paid")
+                            "no captured payment yet - remains not paid")

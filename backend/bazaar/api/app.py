@@ -1,6 +1,6 @@
 """FastAPI backend for the six demo screens.
 
-Every endpoint runs the REAL system — the same gate, receipts, audit log, and
+Every endpoint runs the REAL system - the same gate, receipts, audit log, and
 benchmark used everywhere else. Nothing here is mocked. Razorpay settlement is
 Phase 2 and is reported as pending until test keys are configured.
 
@@ -109,7 +109,7 @@ def _rupees(paise: int) -> str:
 # ----------------------------- endpoints -----------------------------
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "razorpay_settlement": "pending (Phase 2 — needs test keys)"}
+    return {"status": "ok", "razorpay_settlement": "pending (Phase 2 - needs test keys)"}
 
 
 @app.get("/api/catalog")
@@ -173,7 +173,7 @@ def purchase(body: PurchaseIn) -> dict:
         "risk_score": out.risk.score, "effective_decision": out.effective_decision,
         "checks": _checks(out.result),
         "receipt": out.receipt.to_json(),
-        "razorpay": {"status": "pending", "note": "Phase 2 — real test-mode settlement"},
+        "razorpay": {"status": "pending", "note": "Phase 2 - real test-mode settlement"},
     }
 
 
@@ -214,7 +214,7 @@ def attack(body: AttackIn) -> dict:
             txn = s.buyer.build_transaction(tampered, offer)
         elif cls == "expiry":
             # A VALIDLY SIGNED but expired mandate (so the signature passes and the
-            # TTL check is what blocks it — otherwise we'd trip MANDATE_IMMUTABLE).
+            # TTL check is what blocks it - otherwise we'd trip MANDATE_IMMUTABLE).
             import datetime as _dt
 
             from bazaar.models import to_rfc3339
@@ -296,7 +296,7 @@ def settle_txn(body: SettleIn) -> dict:
         s = state()
         txn_id = body.txn_id or s.last_txn_id
         if not txn_id:
-            raise HTTPException(400, "no transaction to settle — run a purchase first")
+            raise HTTPException(400, "no transaction to settle - run a purchase first")
         try:
             result = settle(s.conn, txn_id, RazorpayClient())
         except RazorpayNotConfigured as exc:

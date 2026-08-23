@@ -38,7 +38,7 @@ def line(c: str = "-") -> None:
 
 
 def main() -> int:
-    print("BAZAAR — Phase 3 checkpoint: receipts + hash-chained audit log")
+    print("BAZAAR - Phase 3 checkpoint: receipts + hash-chained audit log")
     line("=")
 
     # --- 1 & 2: Trust Receipt verify-pass then tamper-fail ---
@@ -80,7 +80,7 @@ def main() -> int:
         print("4. Attacker edits the payload of audit entry seq=4 in the database.")
         print(f"   verify_chain() -> ok={broken.ok}  broken_at_seq={broken.broken_at_seq}"
               f"  ({broken.detail})")
-        print("   (expected: ok=False, broken_at_seq=4) — tamper-evident without a blockchain.")
+        print("   (expected: ok=False, broken_at_seq=4) - tamper-evident without a blockchain.")
         conn.close()
     line("=")
     print("✓ Phase 3 checkpoint complete.")

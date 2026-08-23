@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bazaar"
 version = "0.1.0"
-description = "BAZAAR — deterministic authorization gate for AI-to-AI commerce on Razorpay Test Mode."
+description = "BAZAAR - deterministic authorization gate for AI-to-AI commerce on Razorpay Test Mode."
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "vedant", email = "jaiswalvedant2004@gmail.com" }]
 dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
-    "pynacl>=1.5",          # Ed25519 via libsodium — vetted, never hand-rolled
+    "pynacl>=1.5",          # Ed25519 via libsodium - vetted, never hand-rolled
     "rfc8785>=0.1.2",       # RFC 8785 JSON Canonicalization Scheme (JCS)
     "pydantic>=2.6",
     "python-dotenv>=1.0",

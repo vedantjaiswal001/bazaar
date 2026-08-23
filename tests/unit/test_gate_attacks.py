@@ -64,7 +64,7 @@ def test_price_attack_false_price_blocks(keys):
     sk, vk = keys
     m = make_signed_mandate(signing_key=sk, public_key=vk)
     record = make_record(price=649_900, category="footwear")  # true price ₹6,499
-    # Agent claims it read ₹4,499 from the record — a lie.
+    # Agent claims it read ₹4,499 from the record - a lie.
     txn = make_txn(mandate=m, amount=449_900, category="footwear",
                    price_source=PriceSource.MERCHANT_RECORD)
     result = _authorize(txn, record)

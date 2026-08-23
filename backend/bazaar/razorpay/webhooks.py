@@ -47,7 +47,7 @@ def handle_event(conn: sqlite3.Connection, event: dict[str, Any]) -> WebhookResu
     """Apply a *verified* webhook event to our state, idempotently.
 
     Call verify_webhook_signature() on the raw body BEFORE this. Never creates an
-    order and never re-charges — reconciliation only moves state forward once.
+    order and never re-charges - reconciliation only moves state forward once.
     """
     etype = event.get("event", "")
     entity = _payment_entity(event)
@@ -78,7 +78,7 @@ def handle_event(conn: sqlite3.Connection, event: dict[str, Any]) -> WebhookResu
 
     if etype in ("payment.captured", "order.paid"):
         if row["status"] == "settled":
-            # Already settled (possibly by a prior different event) — do not re-charge.
+            # Already settled (possibly by a prior different event) - do not re-charge.
             return WebhookResult("duplicate_ignored", txn_id, "already settled")
         repo.set_transaction_settlement(conn, txn_id, status="settled",
                                         razorpay_payment_id=payment_id)

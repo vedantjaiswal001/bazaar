@@ -1,4 +1,4 @@
-"""DB-backed authorization service — the live adapter around the pure gate.
+"""DB-backed authorization service - the live adapter around the pure gate.
 
 Flow for one transaction:
   1. read live state from the DB (nonce used? idempotency key used? agent frozen?)
@@ -7,7 +7,7 @@ Flow for one transaction:
   4. on ALLOW: reserve the nonce and record the transaction. The DB UNIQUE
      constraints are the final word: if a race slipped past step 1, the INSERT
      fails and we downgrade to the correct reason code (defense in depth).
-  5. sign a Trust Receipt and append a hash-chained audit entry — always.
+  5. sign a Trust Receipt and append a hash-chained audit entry - always.
 
 The deterministic reason code is what gets recorded and measured. The risk signal
 is surfaced for display/escalation but never rewrites a deterministic reason.

@@ -1,10 +1,10 @@
-"""Razorpay Test Mode client — real Orders + Payments.
+"""Razorpay Test Mode client - real Orders + Payments.
 
 Keys come from the environment only (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET);
 never hardcoded. This wraps the official `razorpay` SDK. Order creation is a
 payment-mutating operation, so we do NOT assume Razorpay dedupes it for us: we
 pass our own idempotency key as the order `receipt` and dedupe at our own layer
-(see settlement.py) — an honest choice that does not invent an API guarantee.
+(see settlement.py) - an honest choice that does not invent an API guarantee.
 """
 from __future__ import annotations
 
@@ -74,5 +74,5 @@ class RazorpayClient:
         return self._sdk().payment.fetch(payment_id)
 
     def order_payments(self, order_id: str) -> dict[str, Any]:
-        """All payments against an order — the reconciliation source of truth."""
+        """All payments against an order - the reconciliation source of truth."""
         return self._sdk().order.payments(order_id)

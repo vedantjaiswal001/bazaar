@@ -1,4 +1,4 @@
-"""Bounded negotiation — exactly one round, inside two hard walls.
+"""Bounded negotiation - exactly one round, inside two hard walls.
 
 The two walls are the buyer's signed mandate cap and the seller's policy floor,
 both visible in the transcript (and on screen in the UI). The negotiated price is

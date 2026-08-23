@@ -1,4 +1,4 @@
-"""Intent Compiler — natural language -> a structured mandate draft.
+"""Intent Compiler - natural language -> a structured mandate draft.
 
 This is a PROBABILISTIC / advisory step: it proposes. It never signs and never
 authorizes. The human confirms the rendered draft, and only then is it signed.
@@ -92,9 +92,9 @@ class RuleBasedIntentParser:
         categories = _extract_categories(text)
         notes = []
         if amount == 0:
-            notes.append("no spend cap detected — human must set one before signing")
+            notes.append("no spend cap detected - human must set one before signing")
         if not categories:
-            notes.append("no category detected — human must set one before signing")
+            notes.append("no category detected - human must set one before signing")
         return IntentDraft(
             raw_text=text,
             max_amount=amount,

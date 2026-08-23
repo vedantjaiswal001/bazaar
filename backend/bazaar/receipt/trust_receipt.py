@@ -1,8 +1,8 @@
-"""Trust Receipt — a signed, verifiable record of one authorization decision.
+"""Trust Receipt - a signed, verifiable record of one authorization decision.
 
 Every authorization (ALLOW or BLOCK) emits a receipt: canonical JSON, Ed25519
 signed by the authority key. Anyone can re-verify it offline. Tampering with a
-single field makes verification fail — the cryptography is real, not decorative.
+single field makes verification fail - the cryptography is real, not decorative.
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The deterministic authorization gate — the heart of BAZAAR.
+"""The deterministic authorization gate - the heart of BAZAAR.
 
 A fixed checklist. Every money action passes through it. All checks pass -> ALLOW.
 Any check fails -> BLOCK with exactly one machine-readable reason code. There is
@@ -56,7 +56,7 @@ def authorize(
     if not sig_ok:
         return _block(
             Reason.MANDATE_IMMUTABLE,
-            "mandate signature does not verify — a signed field was altered",
+            "mandate signature does not verify - a signed field was altered",
             checks,
         )
 

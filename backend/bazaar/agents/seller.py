@@ -1,4 +1,4 @@
-"""Seller agent. Proposes and upsells — but is NEVER the source of truth for price.
+"""Seller agent. Proposes and upsells - but is NEVER the source of truth for price.
 
 It holds only a read-only catalog view. It can suggest a pricier item (bounded
 upsell) and counter a buyer's opening price, but the authoritative price always

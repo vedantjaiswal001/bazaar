@@ -4,7 +4,7 @@
 
 Throws N randomized states at the pure gate and reports the ACTUAL number of
 states where the gate authorized an amount greater than the signed cap. That
-number is produced by running — never written before the run. Zero is the
+number is produced by running - never written before the run. Zero is the
 expected result; a non-zero result is a real finding and is printed as one.
 """
 from __future__ import annotations
@@ -56,11 +56,11 @@ def run_fuzz(iterations: int = 20_000, seed: int | None = None) -> FuzzReport:
 
     for _ in range(iterations):
         cap = rng.randint(1, 10_000_000)
-        # Half the states are "coherent" — engineered so the ALLOW path is
+        # Half the states are "coherent" - engineered so the ALLOW path is
         # actually reachable and the CAP BOUNDARY is exercised (price straddles
         # the cap, amount tracks price). The other half is adversarial noise.
         # Without this, independent amount/price would block on price every time
-        # and the invariant would be tested with zero ALLOWs — vacuously true.
+        # and the invariant would be tested with zero ALLOWs - vacuously true.
         coherent = rng.random() < 0.5
         if coherent:
             price = rng.randint(0, int(cap * 1.3) + 1)   # straddles the cap

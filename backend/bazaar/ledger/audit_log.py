@@ -1,4 +1,4 @@
-"""Append-only, hash-chained audit log — tamper-evident without a blockchain.
+"""Append-only, hash-chained audit log - tamper-evident without a blockchain.
 
 Each entry commits to the previous entry's hash:
 

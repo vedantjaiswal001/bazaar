@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""BAZAAR benchmark — one command regenerates the sets, runs the gate + fuzzer,
+"""BAZAAR benchmark - one command regenerates the sets, runs the gate + fuzzer,
 and prints the scoreboard. Every number is produced by this run. Escapes, if any,
 are printed honestly and cause a non-zero exit.
 
@@ -63,7 +63,7 @@ def main() -> int:
     print(f"    4. fuzzer spend-cap violations       : {fuzz.cap_violations}"
           f"   (over {fuzz.iterations:,} states, seed {fuzz.seed})")
     print("-" * W)
-    print("  SECURITY CORRECTNESS — per attack class (blocked / correct reason code)")
+    print("  SECURITY CORRECTNESS - per attack class (blocked / correct reason code)")
     for cls in sorted(sec.per_class_blocked):
         b = sec.per_class_blocked[cls]
         c = sec.per_class_correct_code[cls]
@@ -83,7 +83,7 @@ def main() -> int:
     print(f"    AOV uplift                           : {rev.aov_uplift_pct:.2f}%")
     print(f"    share of upsold orders clearing gate : {pct(rev.share_of_uplift_cleared)}")
     print("-" * W)
-    print("  BEHAVIORAL CLASSIFIER — advisory risk model ONLY (kept separate)")
+    print("  BEHAVIORAL CLASSIFIER - advisory risk model ONLY (kept separate)")
     print(f"    precision {risk.precision:.3f}  recall {risk.recall:.3f}  F1 {risk.f1:.3f}"
           f"   (tp={risk.tp} fp={risk.fp} fn={risk.fn} tn={risk.tn})")
     print("    (the deterministic gate has no 'accuracy'; only this classifier does)")

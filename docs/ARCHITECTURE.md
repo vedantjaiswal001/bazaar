@@ -1,4 +1,4 @@
-# BAZAAR — Architecture
+# BAZAAR - Architecture
 
 ## One principle
 
@@ -30,13 +30,13 @@ Razorpay Test Mode  ──►  webhook  ──►  Trust Receipt (signed) ──
 | `policy/`         | Constraints: category allowlist, caps, risk escalation                | Yes      |
 | `verifier/`       | **The gate.** Fixed checklist → ALLOW or one reason code              | **Yes**  |
 | `risk/`           | Advisory risk signal; may only tighten the gate                       | No       |
-| `catalog/`        | Merchant of record — authoritative price/category, seller read-only   | Yes      |
+| `catalog/`        | Merchant of record - authoritative price/category, seller read-only   | Yes      |
 | `agents/`         | Buyer + seller agents; bounded negotiation                            | No       |
 | `crypto/`         | Ed25519 signing + RFC 8785 canonical JSON (vetted libs only)          | Yes      |
 | `ledger/`         | Append-only, hash-chained audit log                                   | Yes      |
 | `receipt/`        | Signed Trust Receipt + live verify                                    | Yes      |
 | `razorpay/`       | Test-mode Orders + Payments + verified webhooks                       | Yes      |
-| `redteam/`        | Adversarial agent + property fuzzer                                   | —        |
+| `redteam/`        | Adversarial agent + property fuzzer                                   | -        |
 | `db/`             | SQLite schema + access; UNIQUE constraints enforce two defenses       | Yes      |
 
 ## The boundary that must not blur

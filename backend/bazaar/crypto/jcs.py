@@ -2,7 +2,7 @@
 
 Everything that gets signed or hash-chained is first canonicalized here, so the
 exact same bytes are produced regardless of key order or whitespace. We do not
-hand-roll this — we use the `rfc8785` library.
+hand-roll this - we use the `rfc8785` library.
 """
 from __future__ import annotations
 

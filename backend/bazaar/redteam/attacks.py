@@ -1,4 +1,4 @@
-"""Red-team attack generators — labeled cases for every class in the threat model.
+"""Red-team attack generators - labeled cases for every class in the threat model.
 
 Each case is fully self-describing: a transaction (plus the DB-state flags the
 gate needs) and the verdict + reason code we expect. The benchmark runs these

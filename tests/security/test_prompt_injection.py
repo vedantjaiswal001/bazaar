@@ -2,7 +2,7 @@
 
 Two facts, both asserted:
   1. The HONEST agent sources money-fields from the merchant of record, so an
-     injected instruction in the description has ZERO effect — the purchase
+     injected instruction in the description has ZERO effect - the purchase
      settles at the true price and is ALLOWed.
   2. A FOOLED agent that took a money-field from the untrusted description is
      blocked outright with UNTRUSTED_INSTRUCTION, whatever the value happens to be.

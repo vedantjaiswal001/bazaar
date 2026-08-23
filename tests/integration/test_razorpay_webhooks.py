@@ -88,7 +88,7 @@ def test_settle_is_idempotent(db):
     r2 = settle(db, txn.txn_id, fake)
     assert r1.status == "order_created"
     assert r2.status == "order_exists"
-    assert r1.order_id == r2.order_id           # same order — no second charge
+    assert r1.order_id == r2.order_id           # same order - no second charge
     assert fake.n == 1                            # create_order called exactly once
 
 

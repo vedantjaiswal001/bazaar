@@ -1,4 +1,4 @@
-"""Merchant of record — the authoritative source of price and category.
+"""Merchant of record - the authoritative source of price and category.
 
 Trust boundary: the SELLER AGENT gets a read-only view (`seller_view`) with no
 write path at all. Prices are seeded/updated only through the admin path
@@ -7,7 +7,7 @@ write path at all. Prices are seeded/updated only through the admin path
 Negotiation asks the merchant of record to `make_offer`. The seller may *propose*
 a price, but `make_offer` clamps it into the merchant's own [floor, list] band and
 returns an authoritative, snapshotted price. The seller can never move money
-outside that band — that is the price-integrity defense.
+outside that band - that is the price-integrity defense.
 """
 from __future__ import annotations
 

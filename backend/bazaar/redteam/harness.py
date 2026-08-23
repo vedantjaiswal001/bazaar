@@ -1,9 +1,9 @@
 """Evaluation harness. Runs cases through the PURE gate and computes honest metrics.
 
 Two vocabularies, kept strictly separate (see docs/EVAL.md):
-  * the deterministic gate is CORRECT/INCORRECT vs the spec — we report block
+  * the deterministic gate is CORRECT/INCORRECT vs the spec - we report block
     rates and reason-code correctness, never "accuracy";
-  * the risk model is a probabilistic CLASSIFIER — it alone gets precision /
+  * the risk model is a probabilistic CLASSIFIER - it alone gets precision /
     recall / F1, reported separately and never merged with gate correctness.
 """
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Reproducible benchmark datasets.
 
 Development set and a separately-seeded HELD-OUT set of fresh, unseen instances.
-Because the gate is deterministic it cannot "overfit" — the held-out result is
+Because the gate is deterministic it cannot "overfit" - the held-out result is
 reported anyway, as the strongest honest signal that the numbers are real.
 """
 from __future__ import annotations

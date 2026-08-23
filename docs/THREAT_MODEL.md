@@ -1,4 +1,4 @@
-# BAZAAR — Threat Model
+# BAZAAR - Threat Model
 
 BAZAAR is a deterministic authorization gate for AI-to-AI commerce. The threat
 model is the spec. Every attack below maps to one defense and one
@@ -42,7 +42,7 @@ seller agent has **no write path** to that table.
 - A seller that lies at offer-time (claims ₹4,499 while the merchant record says
   ₹6,499) is blocked: `PRICE_MISMATCH_MERCHANT_RECORD`.
 - A price changed after authorization is blocked at settlement for the same
-  reason — the frozen snapshot is the only price that can settle.
+  reason - the frozen snapshot is the only price that can settle.
 - **Prompt injection** in catalog `description` text can move the LLM's *words*
   but not the *money*: the verifier re-checks price and category against the
   signed mandate and the merchant record, neither of which injected text can

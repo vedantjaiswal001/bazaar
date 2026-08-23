@@ -53,7 +53,7 @@ function Checklist({ checks }: { checks: Check[] }) {
         <div className="check" key={c.name}>
           <span className={`mark ${c.passed ? "pass" : "fail"}`}>{c.passed ? "✓" : "✗"}</span>
           <span className="name">{c.name}</span>
-          {c.detail && <span className="muted small">— {c.detail}</span>}
+          {c.detail && <span className="muted small">- {c.detail}</span>}
         </div>
       ))}
     </div>
@@ -89,7 +89,7 @@ export default function App() {
         <div className="kicker">Razorpay AI Buildathon 2026 · Track 01</div>
         <h1 className="brand">BAZAAR</h1>
         <p className="tagline">
-          Adversarial infrastructure for autonomous commerce. AI agents can transact — BAZAAR
+          Adversarial infrastructure for autonomous commerce. AI agents can transact - BAZAAR
           measures whether they <i>should be allowed to</i>.
         </p>
         <div className="invariant">
@@ -109,7 +109,7 @@ export default function App() {
         ))}
       </nav>
 
-      {err && <div className="panel err">Error: {err} — is the backend running? (<code>make run</code>)</div>}
+      {err && <div className="panel err">Error: {err} - is the backend running? (<code>make run</code>)</div>}
 
       {tab === "intent" && <IntentScreen onRun={runPurchase} setErr={setErr} />}
       {tab === "transaction" && <TransactionScreen purchase={purchase} onRun={runPurchase} />}
@@ -145,7 +145,7 @@ function IntentScreen({
       <h2>Intent → signed mandate</h2>
       <p className="sub">
         A natural-language request is compiled into a structured mandate. The human confirms the
-        rendered mandate <i>before</i> it is Ed25519-signed — a bad parse can never become a signed
+        rendered mandate <i>before</i> it is Ed25519-signed - a bad parse can never become a signed
         boundary.
       </p>
       <label>Natural-language intent</label>
@@ -157,7 +157,7 @@ function IntentScreen({
       {result && (
         <div className="panel" style={{ marginTop: 16 }}>
           <div className="kv"><span className="k">Spend cap</span><span className="mono">{result.max_amount_display}</span></div>
-          <div className="kv"><span className="k">Allowed categories</span><span className="mono">{result.allowed_categories.join(", ") || "—"}</span></div>
+          <div className="kv"><span className="k">Allowed categories</span><span className="mono">{result.allowed_categories.join(", ") || "-"}</span></div>
           <div className="kv"><span className="k">Return policy</span><span className="mono">{result.return_policy_days} days</span></div>
           <div className="kv"><span className="k">Autonomous</span><span className="mono">{String(result.autonomous)}</span></div>
           <div className="kv"><span className="k">Expires</span><span className="mono">{result.expires_at}</span></div>
@@ -207,7 +207,7 @@ function TransactionScreen({
       <h2>Bounded negotiation → deterministic settlement</h2>
       <p className="sub">
         One negotiation round, clamped between the buyer's cap and the seller's floor. The
-        authoritative price comes from the merchant of record — never the seller's word.
+        authoritative price comes from the merchant of record - never the seller's word.
       </p>
       <div className="row">
         <label style={{ margin: 0 }}>
@@ -233,12 +233,12 @@ function TransactionScreen({
                 <DecisionPill decision={purchase.decision} /> <span className="mono">{purchase.reason}</span>
               </div>
               <div className="small muted">risk score {purchase.risk_score} → effective {purchase.effective_decision}</div>
-              <div className="small muted">Razorpay: {purchase.razorpay.status} — {purchase.razorpay.note}</div>
+              <div className="small muted">Razorpay: {purchase.razorpay.status} - {purchase.razorpay.note}</div>
             </div>
           </div>
 
           <div style={{ marginTop: 20 }}>
-            <label>Negotiation — item {purchase.negotiation.sku} {purchase.negotiation.upsold ? "(upsold)" : ""}</label>
+            <label>Negotiation - item {purchase.negotiation.sku} {purchase.negotiation.upsold ? "(upsold)" : ""}</label>
             <Walls n={purchase.negotiation} />
             <div className="transcript">
               {purchase.negotiation.transcript.map((s, i) => (
@@ -266,7 +266,7 @@ function VerifierScreen({ last }: { last: LastAction | null }) {
       <h2>The deterministic authorization gate</h2>
       <p className="sub">
         A fixed checklist. All checks pass → ALLOW. Any check fails → BLOCK with one
-        machine-readable reason code — never "the AI decided no."
+        machine-readable reason code - never "the AI decided no."
       </p>
       {!last && <p className="muted">Run a purchase or an attack to populate the checklist.</p>}
       {last && (
@@ -287,7 +287,7 @@ function ReceiptScreen({ last }: { last: LastAction | null }) {
 
   async function verify(receipt: Receipt) {
     const r = await api.verifyReceipt(receipt);
-    setVerdict(r.valid ? "VALID — signature verifies" : "INVALID — signature does not verify");
+    setVerdict(r.valid ? "VALID - signature verifies" : "INVALID - signature does not verify");
   }
   function tamperAndVerify(receipt: Receipt) {
     const forged: Receipt = JSON.parse(JSON.stringify(receipt));
@@ -298,10 +298,10 @@ function ReceiptScreen({ last }: { last: LastAction | null }) {
 
   return (
     <div className="panel">
-      <h2>Trust Receipt — verifiable, tamper-evident</h2>
+      <h2>Trust Receipt - verifiable, tamper-evident</h2>
       <p className="sub">
-        Every decision emits a canonical-JSON, Ed25519-signed receipt. Verify it — it passes. Change
-        one field — it fails. The cryptography is real, not decorative.
+        Every decision emits a canonical-JSON, Ed25519-signed receipt. Verify it - it passes. Change
+        one field - it fails. The cryptography is real, not decorative.
       </p>
       {!last && <p className="muted">Run a purchase or attack first to produce a receipt.</p>}
       {last && (
@@ -354,10 +354,10 @@ function RedTeamScreen({
 
   return (
     <div className="panel">
-      <h2>Red-team harness — nine attack classes, live</h2>
+      <h2>Red-team harness - nine attack classes, live</h2>
       <p className="sub">
         Fire attacks at the live gate. Each returns a specific reason code. Results are measured, not
-        asserted — {blocked}/{Object.keys(results).length || 0} blocked so far.
+        asserted - {blocked}/{Object.keys(results).length || 0} blocked so far.
       </p>
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn" onClick={fireAll} disabled={busy}>{busy ? "Firing…" : "Fire all 9"}</button>
@@ -406,13 +406,13 @@ function BenchmarkScreen({ setErr }: { setErr: (s: string) => void }) {
       <h2>Benchmark scoreboard</h2>
       <p className="sub">
         Every number is produced by <code>make benchmark</code>. The deterministic gate is
-        correct/incorrect (block rates); only the advisory risk model gets precision/recall — kept
+        correct/incorrect (block rates); only the advisory risk model gets precision/recall - kept
         separate.
       </p>
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn" onClick={load}>Reload scoreboard</button>
       </div>
-      {hint && <p className="muted">Scoreboard not generated yet — {hint}.</p>}
+      {hint && <p className="muted">Scoreboard not generated yet - {hint}.</p>}
       {board && f && (
         <>
           <div className="grid three">
@@ -426,7 +426,7 @@ function BenchmarkScreen({ setErr }: { setErr: (s: string) => void }) {
             <div className="stat"><div className="cap">Risk classifier (separate)</div><div className="big-num">{board.risk_classifier.precision.toFixed(2)}</div><div className="small muted">precision · recall {board.risk_classifier.recall.toFixed(2)}</div></div>
           </div>
 
-          <label style={{ marginTop: 18 }}>Per attack class — blocked / correct reason code</label>
+          <label style={{ marginTop: 18 }}>Per attack class - blocked / correct reason code</label>
           <div>
             {Object.keys(board.per_class_blocked).sort().map((cls) => (
               <div className="kv" key={cls}>

@@ -1,4 +1,4 @@
-# BAZAAR — one Makefile drives the whole project.
+# BAZAAR - one Makefile drives the whole project.
 #   make setup      create venv, install backend, initialize the database
 #   make test       run the full test suite (unit + property + security + integration)
 #   make fuzz       run the property-based fuzzer against the spend-cap invariant
