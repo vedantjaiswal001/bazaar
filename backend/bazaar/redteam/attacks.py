@@ -18,6 +18,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import timedelta
 
+from bazaar.crypto.signing import generate_keypair
 from bazaar.models import (
     Mandate,
     MerchantRecord,
@@ -31,6 +32,7 @@ from bazaar.verifier.reasons import ATTACK_CLASS_TO_REASON, Decision, Reason
 
 ATTACK_CLASSES = list(ATTACK_CLASS_TO_REASON.keys())
 _ALLOW_CATS = ("footwear",)
+_CATEGORIES = ["footwear", "apparel", "wearables", "electronics", "grocery"]
 _CAP = 500_000  # ₹5,000
 
 
@@ -46,6 +48,7 @@ class Case:
     nonce_seen: bool = False
     idem_seen: bool = False
     agent_frozen: bool = False
+    trusted_issuer_keys: frozenset[str] | None = None
 
 
 def _mandate(sk: str, pk: str, *, cap: int = _CAP, cats=_ALLOW_CATS,
@@ -86,8 +89,11 @@ def _make_attack(cls: str, rng: random.Random, sk: str, pk: str) -> Case:
         txn = _txn(m, offer)                                   # amount == price > cap
     elif cls == "policy":
         offer = _record(price=rng.randint(100_000, _CAP))
-        tampered = dataclasses.replace(m, max_amount=_CAP * 2)  # rewrite the signed cap
-        txn = _txn(tampered, offer)
+        # Forged mandate: the agent mints a mandate with a doubled cap and signs it
+        # with its OWN key. Internally valid, but the key is not the trusted issuer.
+        atk_sk, atk_pk = generate_keypair()
+        forged = _mandate(atk_sk, atk_pk, cap=_CAP * 2)
+        txn = _txn(forged, offer)
     elif cls == "price":
         p = rng.randint(100_000, _CAP)
         offer = _record(price=p)
@@ -127,29 +133,43 @@ def _make_attack(cls: str, rng: random.Random, sk: str, pk: str) -> Case:
 
 
 def _make_legit(rng: random.Random, sk: str, pk: str) -> Case:
-    """A within-policy transaction that SHOULD be allowed. Boundary amounts included."""
-    m = _mandate(sk, pk)
-    # Amounts sampled independently of the threshold, weighted toward the edges.
+    """A within-policy transaction that SHOULD be allowed.
+
+    Deliberately realistic and varied so a 0% false-block rate is a real signal,
+    not an artifact: caps vary, mandates carry multiple allowed categories, the
+    purchased category is any allowed one (not always footwear), and amounts span
+    the whole in-cap range INCLUDING the boundary edges (cap, cap-100, cap-5000).
+    """
+    cap = rng.choice([300_000, 500_000, 700_000, 1_000_000])
+    cats = tuple(sorted(set(
+        rng.sample(list(_CATEGORIES), rng.randint(1, 3)))))
+    category = rng.choice(cats)
+    m = _mandate(sk, pk, cap=cap, cats=cats)
     amount = rng.choice([
-        rng.randint(300_000, _CAP),          # general
-        _CAP - 5_000,                        # ₹4,950 (boundary)
-        _CAP - 100,                          # ₹4,999
-        _CAP,                                # exactly at the cap (must still pass)
-        rng.randint(_CAP - 20_000, _CAP),    # near-cap band
+        rng.randint(1_000, cap),                     # anywhere in range
+        cap - 5_000, cap - 100, cap,                 # boundary edges (must still pass)
+        rng.randint(max(1, cap - 20_000), cap),      # near-cap band
     ])
-    offer = _record(price=amount)            # price == amount == authoritative
+    amount = min(amount, cap)
+    offer = _record(sku=f"SKU-{category[:4].upper()}", category=category, price=amount)
     txn = _txn(m, offer)
     return Case(f"leg-{uuid.uuid4().hex[:6]}", "legit", None, txn, offer,
                 Decision.ALLOW.value, Reason.OK.value)
 
 
 def generate_adversarial(rng: random.Random, sk: str, pk: str, per_class: int = 16) -> list[Case]:
+    """`pk` is the trusted issuer key; every case is pinned to it (a forged mandate
+    signed by any other key is rejected)."""
+    trusted = frozenset({pk})
     cases: list[Case] = []
     for cls in ATTACK_CLASSES:
         for _ in range(per_class):
-            cases.append(_make_attack(cls, rng, sk, pk))
+            c = _make_attack(cls, rng, sk, pk)
+            cases.append(dataclasses.replace(c, trusted_issuer_keys=trusted))
     return cases
 
 
 def generate_legitimate(rng: random.Random, sk: str, pk: str, n: int = 400) -> list[Case]:
-    return [_make_legit(rng, sk, pk) for _ in range(n)]
+    trusted = frozenset({pk})
+    return [dataclasses.replace(_make_legit(rng, sk, pk), trusted_issuer_keys=trusted)
+            for _ in range(n)]

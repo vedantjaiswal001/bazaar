@@ -43,6 +43,9 @@ def settle(conn: sqlite3.Connection, txn_id: str, client: RazorpayClient) -> Set
     if row["decision"] != "ALLOW":
         return SettlementResult("not_authorized", txn_id, None, None,
                                 f"transaction decision is {row['decision']}, not ALLOW")
+    if row["status"] == "review_hold":
+        return SettlementResult("not_authorized", txn_id, None, row["amount"],
+                                "transaction is on human-review hold; approve before settling")
     if row["status"] == "settled":
         return SettlementResult("already_settled", txn_id, row["razorpay_order_id"],
                                 row["amount"], "already settled")

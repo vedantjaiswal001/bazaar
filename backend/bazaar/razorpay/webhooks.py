@@ -77,6 +77,11 @@ def handle_event(conn: sqlite3.Connection, event: dict[str, Any]) -> WebhookResu
         return WebhookResult("duplicate_ignored", txn_id, "already settled with this payment")
 
     if etype in ("payment.captured", "order.paid"):
+        if amount is None:
+            # A capture with no amount cannot be verified against the authorized
+            # amount, so it must not settle (fail closed).
+            return WebhookResult("amount_mismatch", txn_id,
+                                 "captured event has no amount - not settled")
         if row["status"] == "settled":
             # Already settled (possibly by a prior different event) - do not re-charge.
             return WebhookResult("duplicate_ignored", txn_id, "already settled")

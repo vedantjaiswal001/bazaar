@@ -15,11 +15,11 @@ import tempfile
 from pathlib import Path
 
 from bazaar.agents.buyer import BuyerAgent
+from bazaar.agents.issuer import Issuer
 from bazaar.agents.negotiation import negotiate
 from bazaar.agents.seller import SellerAgent
 from bazaar.catalog.seed import seed_default_catalog
 from bazaar.catalog.store import CatalogStore
-from bazaar.crypto.signing import generate_keypair
 from bazaar.db import repository as repo
 from bazaar.db.database import connect, init_db
 from bazaar.ledger.audit_log import verify_chain
@@ -45,10 +45,10 @@ def main() -> int:
         seed_default_catalog(conn)
         store = CatalogStore(conn)
         seller = SellerAgent("merch-athleto", store.seller_view())
-        sk, pk = generate_keypair()
-        buyer = BuyerAgent("buyer-1", sk, pk)
+        issuer = Issuer()                            # trusted human authority (signs mandates)
+        buyer = BuyerAgent("buyer-1")                # proposes only; holds no signing key
         repo.register_agent(conn, "buyer-1", "Buyer One", "buyer")
-        svc = AuthorizationService(conn)
+        svc = AuthorizationService(conn, trusted_issuer_keys={issuer.public_key})
 
         print("BAZAAR - end-to-end demo")
         hr("=")
@@ -61,7 +61,7 @@ def main() -> int:
         print(f"     cap={rupees(view.max_amount)}  categories={list(view.allowed_categories)}"
               f"  returns={view.return_policy_days}d  autonomous={view.autonomous}")
         print(f"     confirmable={view.is_confirmable()}  expires_at={view.expires_at}")
-        mandate = buyer.confirm_and_sign(unsigned)
+        mandate = issuer.confirm_and_sign(unsigned)
         repo.save_mandate(conn, mandate)
         print(f"   ✓ signed (Ed25519). signature verifies: {mandate.verify_signature()}")
         hr()

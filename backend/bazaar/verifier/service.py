@@ -39,9 +39,13 @@ class AuthorizationOutcome:
 
 
 class AuthorizationService:
-    def __init__(self, conn: sqlite3.Connection, authority_keys: tuple[str, str] | None = None):
+    def __init__(self, conn: sqlite3.Connection, authority_keys: tuple[str, str] | None = None,
+                 trusted_issuer_keys: set[str] | None = None):
         self.conn = conn
         self._sk, self._pk = authority_keys or get_authority_keypair()
+        # Pinned issuer key(s): a mandate must be signed by one of these to pass the
+        # gate. None means the gate self-verifies (no forged-mandate pinning).
+        self.trusted_issuer_keys = trusted_issuer_keys
 
     def authorize(
         self,
@@ -55,16 +59,23 @@ class AuthorizationService:
         nseen = repo.nonce_seen(self.conn, txn.nonce)
         iseen = repo.idempotency_seen(self.conn, txn.idempotency_key)
 
-        result = authorize(txn, offer, nonce_seen=nseen, idempotency_seen=iseen, agent_frozen=frozen)
+        result = authorize(txn, offer, nonce_seen=nseen, idempotency_seen=iseen,
+                           agent_frozen=frozen, trusted_issuer_keys=self.trusted_issuer_keys)
         risk = assess(txn, offer)
 
         persisted = False
         if result.decision == Decision.ALLOW.value:
+            # The advisory risk signal may TIGHTEN an ALLOW to a human-review hold.
+            # A held transaction is recorded but is NOT settleable until approved
+            # (settle() refuses status 'review_hold') - so the signal is enforced,
+            # not merely displayed.
+            held = apply_risk(result, risk).decision == Decision.REVIEW.value
+            status = "review_hold" if held else "authorized"
             # The database has the final say on replay / double-charge.
             try:
                 repo.reserve_nonce(self.conn, txn.nonce, txn.mandate.mandate_id)
                 repo.record_transaction(self.conn, txn, result.decision, result.reason,
-                                        status="authorized")
+                                        status=status)
                 self.conn.commit()
                 persisted = True
             except repo.NonceAlreadyUsed:

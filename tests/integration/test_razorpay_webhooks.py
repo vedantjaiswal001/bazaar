@@ -13,6 +13,7 @@ import json
 import pytest
 
 from bazaar.agents.buyer import BuyerAgent
+from bazaar.agents.issuer import Issuer
 from bazaar.agents.negotiation import negotiate
 from bazaar.agents.seller import SellerAgent
 from bazaar.catalog.seed import seed_default_catalog
@@ -47,12 +48,13 @@ def _authorized_txn(db):
     seed_default_catalog(db)
     store = CatalogStore(db)
     seller = SellerAgent("merch-athleto", store.seller_view())
-    sk, pk = generate_keypair()
-    buyer = BuyerAgent("buyer-1", sk, pk)
+    issuer = Issuer()
+    buyer = BuyerAgent("buyer-1")
     repo.register_agent(db, "buyer-1", "Buyer One", "buyer")
-    svc = AuthorizationService(db, authority_keys=generate_keypair())
+    svc = AuthorizationService(db, authority_keys=generate_keypair(),
+                               trusted_issuer_keys={issuer.public_key})
     _, unsigned, _ = buyer.draft_mandate("shoes under ₹5,000, 30-day returns, auto")
-    mandate = buyer.confirm_and_sign(unsigned)
+    mandate = issuer.confirm_and_sign(unsigned)
     repo.save_mandate(db, mandate)
     offer, _ = negotiate(store=store, seller=seller, buyer_cap=mandate.max_amount,
                          base_sku="SKU-SHOE-01")

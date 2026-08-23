@@ -42,7 +42,8 @@ def evaluate_cases(cases: list[Case]) -> list[CaseResult]:
     results: list[CaseResult] = []
     for c in cases:
         gr = authorize(c.txn, c.offer, nonce_seen=c.nonce_seen,
-                       idempotency_seen=c.idem_seen, agent_frozen=c.agent_frozen)
+                       idempotency_seen=c.idem_seen, agent_frozen=c.agent_frozen,
+                       trusted_issuer_keys=c.trusted_issuer_keys)
         if c.kind == "attack":
             passed = gr.decision == Decision.BLOCK.value and gr.reason == c.expected_reason
         else:

@@ -143,3 +143,28 @@ def test_all_nine_reason_codes_are_distinct():
     from bazaar.verifier.reasons import ATTACK_CLASS_TO_REASON
     codes = [r.value for r in ATTACK_CLASS_TO_REASON.values()]
     assert len(codes) == len(set(codes)) == 9
+
+
+def test_forged_mandate_untrusted_issuer_key_is_blocked(keys):
+    """The strong policy attack: the agent mints its OWN mandate with a huge cap and
+    signs it with its OWN key. The signature is internally valid, but with issuer
+    pinning the key is not trusted -> blocked. (Without pinning this would ALLOW,
+    which is exactly why pinning exists.)"""
+    sk, vk = keys                                     # the trusted issuer key
+    trusted = {vk}
+
+    # A mandate signed by the trusted issuer passes the pin.
+    good = make_signed_mandate(signing_key=sk, public_key=vk)
+    record = make_record()
+    ok = authorize(make_txn(mandate=good), record, nonce_seen=False,
+                   idempotency_seen=False, agent_frozen=False, trusted_issuer_keys=trusted)
+    assert ok.decision == Decision.ALLOW.value
+
+    # A mandate the agent forged with its OWN key (200x cap) is rejected by the pin.
+    atk_sk, atk_vk = make_keypair()
+    forged = make_signed_mandate(signing_key=atk_sk, public_key=atk_vk, max_amount=100_000_000)
+    big = make_record(price=100_000_000, category="footwear")
+    r = authorize(make_txn(mandate=forged, amount=100_000_000), big, nonce_seen=False,
+                  idempotency_seen=False, agent_frozen=False, trusted_issuer_keys=trusted)
+    assert r.decision == Decision.BLOCK.value
+    assert r.reason == Reason.MANDATE_IMMUTABLE.value

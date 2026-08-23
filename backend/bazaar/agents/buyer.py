@@ -21,7 +21,6 @@ from bazaar.models import (
     PriceSource,
     TransactionRequest,
     now_utc,
-    sign_mandate,
     to_rfc3339,
 )
 
@@ -43,17 +42,16 @@ class ConfirmationView:
 
 
 class BuyerAgent:
+    """Proposes. Never signs. The buyer agent holds NO mandate-signing key - only
+    the Issuer does - so a compromised buyer cannot self-issue a mandate."""
+
     def __init__(
         self,
         agent_id: str,
-        signing_key: str,
-        public_key: str,
         parser: IntentParser | None = None,
         ttl_seconds: int | None = None,
     ) -> None:
         self.agent_id = agent_id
-        self._sk = signing_key
-        self._pk = public_key
         self._parser = parser
         self._ttl = ttl_seconds or settings.mandate_ttl_seconds
 
@@ -81,16 +79,6 @@ class BuyerAgent:
             warnings=draft.notes,
         )
         return draft, unsigned, view
-
-    def confirm_and_sign(self, unsigned: Mandate) -> Mandate:
-        """The confirmation gate: only a confirmable, human-approved draft is signed.
-
-        This closes the most-attackable seam - a bad parse can never become a
-        signed, 'valid' boundary, because signing happens only after confirmation.
-        """
-        if unsigned.max_amount <= 0 or not unsigned.allowed_categories:
-            raise ValueError("mandate draft is not confirmable (missing cap or category)")
-        return sign_mandate(self._sk, self._pk, unsigned)
 
     def build_transaction(
         self,

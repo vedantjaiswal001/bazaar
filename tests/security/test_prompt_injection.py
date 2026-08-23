@@ -12,6 +12,7 @@ from __future__ import annotations
 import dataclasses
 
 from bazaar.agents.buyer import BuyerAgent
+from bazaar.agents.issuer import Issuer
 from bazaar.catalog.seed import seed_default_catalog
 from bazaar.catalog.store import CatalogStore
 from bazaar.crypto.signing import generate_keypair
@@ -24,12 +25,13 @@ from bazaar.verifier.service import AuthorizationService
 def _world(db):
     seed_default_catalog(db)
     store = CatalogStore(db)
-    sk, pk = generate_keypair()
-    buyer = BuyerAgent("buyer-1", sk, pk)
+    issuer = Issuer()
+    buyer = BuyerAgent("buyer-1")
     repo.register_agent(db, "buyer-1", "Buyer One", "buyer")
-    svc = AuthorizationService(db, authority_keys=generate_keypair())
+    svc = AuthorizationService(db, authority_keys=generate_keypair(),
+                               trusted_issuer_keys={issuer.public_key})
     _, unsigned, _ = buyer.draft_mandate("shoes under ₹5,000, 30-day returns, auto")
-    mandate = buyer.confirm_and_sign(unsigned)
+    mandate = issuer.confirm_and_sign(unsigned)
     repo.save_mandate(db, mandate)
     return store, buyer, svc, mandate
 

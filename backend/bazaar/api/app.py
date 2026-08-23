@@ -26,12 +26,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from bazaar.agents.buyer import BuyerAgent
+from bazaar.agents.issuer import Issuer
 from bazaar.agents.negotiation import negotiate
 from bazaar.agents.seller import SellerAgent
 from bazaar.catalog.seed import seed_default_catalog
 from bazaar.catalog.store import CatalogStore
 from bazaar.config import REPO_ROOT, settings
-from bazaar.crypto.signing import generate_keypair
 from bazaar.db import repository as repo
 from bazaar.db.database import connect, init_db
 from bazaar.ledger.audit_log import verify_chain
@@ -58,10 +58,11 @@ class _State:
         seed_default_catalog(self.conn)
         self.store = CatalogStore(self.conn)
         self.seller = SellerAgent("merch-athleto", self.store.seller_view())
-        sk, pk = generate_keypair()
-        self.buyer = BuyerAgent("buyer-1", sk, pk)
+        self.issuer = Issuer()                       # trusted human authority (signs mandates)
+        self.buyer = BuyerAgent("buyer-1")           # proposes only; holds no signing key
         repo.register_agent(self.conn, "buyer-1", "Buyer One", "buyer")
-        self.svc = AuthorizationService(self.conn)
+        # Pin the gate to the issuer key: a mandate signed by anything else is a forgery.
+        self.svc = AuthorizationService(self.conn, trusted_issuer_keys={self.issuer.public_key})
         self.mandates: dict[str, Mandate] = {}
         self.last_nonce: str | None = None
         self.last_txn_id: str | None = None
@@ -140,7 +141,7 @@ def purchase(body: PurchaseIn) -> dict:
         _, unsigned, view = s.buyer.draft_mandate(body.intent_text)
         if not view.is_confirmable():
             raise HTTPException(400, f"mandate not confirmable: {list(view.warnings)}")
-        mandate = s.buyer.confirm_and_sign(unsigned)
+        mandate = s.issuer.confirm_and_sign(unsigned)
         repo.save_mandate(s.conn, mandate)
         s.mandates[mandate.mandate_id] = mandate
 
@@ -187,7 +188,7 @@ def attack(body: AttackIn) -> dict:
             # Ensure a mandate exists (run a purchase first, or create one now).
             _, unsigned, view = s.buyer.draft_mandate(
                 "shoes under ₹5,000, 30-day returns, auto")
-            mandate = s.buyer.confirm_and_sign(unsigned)
+            mandate = s.issuer.confirm_and_sign(unsigned)
             repo.save_mandate(s.conn, mandate)
             s.mandates[mandate.mandate_id] = mandate
 
@@ -209,9 +210,18 @@ def attack(body: AttackIn) -> dict:
             txn = s.buyer.build_transaction(mandate, offer)
             txn = dataclasses.replace(txn, amount=offer.price - 50_000)  # false price
         elif cls == "policy":
+            # Forged mandate: the agent mints its own mandate with a DOUBLED cap and
+            # signs it with ITS OWN key. The signature is internally valid, but the
+            # key is not the trusted issuer -> blocked (MANDATE_IMMUTABLE). This is
+            # the stronger attack: it defeats naive "just verify the signature" gates.
             offer = s.store.make_offer("SKU-SHOE-01")
-            tampered = dataclasses.replace(mandate, max_amount=mandate.max_amount * 2)
-            txn = s.buyer.build_transaction(tampered, offer)
+            attacker = Issuer()
+            forged_unsigned = dataclasses.replace(
+                mandate, mandate_id=f"m-{uuid.uuid4().hex[:8]}",
+                max_amount=mandate.max_amount * 2, signature="", public_key="", canonical_body="")
+            forged = attacker.confirm_and_sign(forged_unsigned)
+            repo.save_mandate(s.conn, forged)                     # satisfy the txn FK
+            txn = s.buyer.build_transaction(forged, offer)
         elif cls == "expiry":
             # A VALIDLY SIGNED but expired mandate (so the signature passes and the
             # TTL check is what blocks it - otherwise we'd trip MANDATE_IMMUTABLE).
@@ -225,7 +235,7 @@ def attack(body: AttackIn) -> dict:
                 issued_at=to_rfc3339(now - _dt.timedelta(hours=1)),
                 expires_at=to_rfc3339(now - _dt.timedelta(minutes=30)),
             )
-            expired = s.buyer.confirm_and_sign(unsigned_exp)
+            expired = s.issuer.confirm_and_sign(unsigned_exp)
             repo.save_mandate(s.conn, expired)                     # satisfy the txn FK
             offer = s.store.make_offer("SKU-SHOE-01")
             txn = s.buyer.build_transaction(expired, offer)

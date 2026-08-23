@@ -52,6 +52,8 @@ def negotiate(
 
     upper = min(record.price, buyer_cap)              # can't agree above list or above cap
     lower = record.floor_price                        # can't agree below the seller's floor
+    if upper < lower:
+        return None, None                             # no viable price: cap below the seller floor
     transcript: list[NegotiationStep] = [
         NegotiationStep("walls", 0, f"buyer cap {buyer_cap} · seller floor {lower} · list {record.price}"),
     ]

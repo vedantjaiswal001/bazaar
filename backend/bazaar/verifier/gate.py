@@ -42,21 +42,38 @@ def authorize(
     nonce_seen: bool,
     idempotency_seen: bool,
     agent_frozen: bool,
+    trusted_issuer_keys: set[str] | frozenset[str] | None = None,
     at: datetime | None = None,
 ) -> GateResult:
     """Run the fixed checklist. Returns ALLOW or BLOCK(reason_code).
 
     The checks run in a fixed order; the FIRST failing check names the reason.
+
+    `trusted_issuer_keys` pins the mandate's signing key to a trusted human/issuer.
+    When provided, the mandate's public key MUST be in this set: this is what stops
+    a compromised agent from minting its own mandate (with its own key and any cap)
+    and having it pass. When None, the gate self-verifies the signature only, which
+    the pure spend-cap invariant tests use since they do not exercise issuer trust.
     """
     checks: list[Check] = []
 
-    # 1. Mandate signature is valid and immutable (Policy attack -> MANDATE_IMMUTABLE).
+    # 1. Mandate signed by a TRUSTED ISSUER (Policy / forged-mandate -> MANDATE_IMMUTABLE).
+    #    Two things must hold: the Ed25519 signature verifies, AND the signing key is
+    #    a pinned issuer key. Editing a signed field breaks the signature; re-signing
+    #    with the agent's own key fails the pin. Neither can escalate authority.
     sig_ok = txn.mandate.verify_signature()
-    checks.append(Check("mandate_signature_valid", sig_ok))
+    issuer_ok = trusted_issuer_keys is None or txn.mandate.public_key in trusted_issuer_keys
+    checks.append(Check("mandate_signed_by_trusted_issuer", sig_ok and issuer_ok))
     if not sig_ok:
         return _block(
             Reason.MANDATE_IMMUTABLE,
             "mandate signature does not verify - a signed field was altered",
+            checks,
+        )
+    if not issuer_ok:
+        return _block(
+            Reason.MANDATE_IMMUTABLE,
+            "mandate not signed by a trusted issuer key (forged mandate)",
             checks,
         )
 

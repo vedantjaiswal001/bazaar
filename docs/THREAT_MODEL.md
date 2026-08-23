@@ -18,8 +18,9 @@ bad faith**. It can:
 - submit against expired mandates.
 
 The adversary **cannot**: forge an Ed25519 signature without the private key,
-write to the merchant-of-record catalog, or bypass the database's UNIQUE
-constraints.
+present a mandate signed by any key other than the trusted issuer's (the buyer
+agent never holds a mandate-signing key - only the human/issuer does), write to
+the merchant-of-record catalog, or bypass the database's UNIQUE constraints.
 
 ## The core invariant (enforced in code, never asserted in prose)
 
@@ -68,7 +69,7 @@ Razorpay as the source of truth. **Never re-charge.**
 | Class         | Attack                                             | Defense                                             | Reason code                      |
 |---------------|----------------------------------------------------|-----------------------------------------------------|----------------------------------|
 | Budget        | Spend above the signed cap (₹5,000 → ₹7,000)       | Cap check: `amount ≤ signed cap`                    | `MANDATE_LIMIT_EXCEEDED`         |
-| Policy        | Agent rewrites its own `max_amount`                | Ed25519 signature over the mandate is immutable     | `MANDATE_IMMUTABLE`              |
+| Policy        | Agent rewrites `max_amount`, or mints a new mandate signed with its own key | Signature must verify AND be from a pinned trusted-issuer key | `MANDATE_IMMUTABLE` |
 | Price         | False price at offer, or price changed after auth  | Merchant-of-record check (frozen snapshot)          | `PRICE_MISMATCH_MERCHANT_RECORD` |
 | Replay        | Same nonce submitted twice                         | DB-unique nonce (constraint in the schema)          | `NONCE_REPLAY`                   |
 | Double-charge | Same transaction resubmitted                       | DB-unique idempotency key + Razorpay idempotency    | `DUPLICATE_TRANSACTION`          |
@@ -83,6 +84,11 @@ Razorpay as the source of truth. **Never re-charge.**
   idempotency-key uniqueness (double-charge). A code path cannot forget them.
 - **In cryptography**: Ed25519 (libsodium via PyNaCl) over RFC 8785 canonical
   JSON. A tampered signed field fails verification. We never hand-roll crypto.
+- **In issuer pinning**: the verifier pins the mandate's signing key to a trusted
+  human/issuer key. The buyer agent proposes a mandate but never holds a signing
+  key, so a compromised agent cannot mint its own mandate (with its own key and an
+  arbitrary cap) and have it pass - the signature must be the issuer's, not the
+  agent's. This is what makes "the agent cannot escalate its own authority" true.
 - **In the module boundary**: the deterministic verifier imports nothing from
   the LLM / agent layer. This is enforced by an architecture test.
 - **In the merchant of record**: price and category are read from
