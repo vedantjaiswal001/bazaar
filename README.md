@@ -68,11 +68,21 @@ make test        # unit + property + security tests
 make fuzz        # property-based fuzzer against the spend-cap invariant
 make benchmark   # regenerate datasets, run gate + fuzzer, print the scoreboard
 make demo        # scripted end-to-end run (no network needed)
+make showcase    # the cinematic one-command demo (built for the video)
 make run         # start the FastAPI backend on :8000
 ```
 
 Razorpay Test Mode settlement (Phase 2) needs test keys - copy `.env.example`
-to `.env` and fill them in. The rest of the system runs with no keys at all.
+to `.env` and fill them in, then:
+
+```bash
+make live        # ONE real Test Mode payment, end to end, no webhook tunnel:
+                 # gate ALLOWs -> real order on Razorpay -> pay with the test
+                 # card -> reconcile settles once -> idempotency proven live.
+make live-fake   # the same flow with no network and no keys (a dry run)
+```
+
+The rest of the system runs with no keys at all.
 
 ## What BAZAAR builds - six components
 

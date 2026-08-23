@@ -34,6 +34,26 @@ system, and every number in the scoreboard is produced by a command you can run.
   Report average-order-value uplift and the share of uplift that still cleared
   the gate (target: all of it).
 
+### What the AOV number is, precisely (and what it is not)
+
+The honest reading matters more than the digit, so it is spelled out here.
+
+- **What it measures:** a controlled A/B on one fixed set of 200 simulated
+  legitimate buyers (seed 7). Each buyer is run through the *same* bounded
+  negotiation twice - once with the seller's in-category upsell **off**, once
+  **on** - and we report `mean(order_value_on) / mean(order_value_off) - 1`. The
+  seller may only ever propose a higher item **in the buyer's allowed category and
+  under the signed cap**; the upsold order is then re-run through the deterministic
+  gate, and we report the share that still cleared it (target and result: 100%).
+- **Why it belongs in a *security* project:** it is the counter-argument to "a
+  safe gate just blocks everything and kills revenue." The point is not the size
+  of the lift; it is that the lift and the safety are not in tension - every extra
+  rupee still passed the same gate that blocks the nine attacks.
+- **What it does NOT claim:** it is not real-world revenue, conversion, or a
+  live-shopper result. There are no real buyers and no real money. It is a
+  reproducible statement about a simulated buyer distribution, nothing more, and
+  the number regenerates from the seed on every `make benchmark`.
+
 ## The scoreboard (`make benchmark`)
 
 | Category            | Metric                                                                 |

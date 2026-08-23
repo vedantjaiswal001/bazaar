@@ -5,6 +5,8 @@
 #   make benchmark  regenerate datasets, run gate + fuzzer, print the scoreboard
 #   make run        start the FastAPI backend
 #   make demo       run the scripted end-to-end demo
+#   make showcase   cinematic one-command demo (for the video)
+#   make live       LIVE Razorpay Test Mode payment (needs .env test keys)
 #   make lint       ruff
 #   make clean      remove venv, db, caches
 
@@ -70,6 +72,18 @@ web-build: ## Type-check and build the frontend
 .PHONY: demo
 demo: ## Run the scripted end-to-end demo (no Razorpay network needed)
 	$(PY) scripts/demo.py
+
+.PHONY: showcase
+showcase: ## Cinematic one-command demo for the video (drives the real backend)
+	$(PY) scripts/showcase.py --pace 0.6
+
+.PHONY: live
+live: ## LIVE Razorpay Test Mode payment (needs .env test keys). Dry run: make live-fake
+	$(PY) scripts/live_razorpay.py
+
+.PHONY: live-fake
+live-fake: ## Dry run of the live settlement flow (no network, no keys)
+	$(PY) scripts/live_razorpay.py --fake --yes
 
 .PHONY: verify
 verify: ## Phase 3 checkpoint: receipt verify/tamper + audit-chain verify/tamper
