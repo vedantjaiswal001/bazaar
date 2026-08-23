@@ -16,10 +16,14 @@ from pathlib import Path
 from bazaar.config import SCHEMA_PATH, settings
 
 
-def connect(db_path: str | None = None) -> sqlite3.Connection:
-    """Open a connection with foreign keys on and Row access."""
+def connect(db_path: str | None = None, *, check_same_thread: bool = True) -> sqlite3.Connection:
+    """Open a connection with foreign keys on and Row access.
+
+    The API passes check_same_thread=False because FastAPI serves requests from a
+    threadpool; access there is serialized with a lock in the API layer.
+    """
     path = db_path or settings.db_path
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
