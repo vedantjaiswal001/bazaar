@@ -30,6 +30,9 @@ frontend/.vite/
 # Benchmark outputs are regenerated; keep the repo clean
 benchmarks/out/
 
+# Delivery/build artifacts (a git bundle of this repo is not part of the repo)
+*.bundle
+
 # OS / editor
 .DS_Store
 *.swp
