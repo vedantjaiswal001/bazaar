@@ -32,7 +32,12 @@ ran successfully. Anything not yet run says so.
 ### ⬜ Phase 2 — Razorpay Test Mode settlement
 - Needs Vedant's Razorpay **test-mode** API keys. Deferred until then.
 
-### ⬜ Phase 3 — Trust Receipt + hash-chained audit log
+### ✅ Phase 3 — Trust Receipt + hash-chained audit log
+- receipt/trust_receipt.py: canonical-JSON, Ed25519-signed receipt per decision.
+- ledger/audit_log.py: append-only chain, entry_hash = SHA-256(prev_hash || JCS(payload)).
+- **Checkpoint (`make verify`, actual run):** receipt verify=True, then tamper→False;
+  audit chain verify ok=True over 6 entries, then edit seq=4 → ok=False, broken_at_seq=4.
+- `make test` → 28 passed.
 ### ⬜ Phase 4 — Agents + merchant catalog + bounded negotiation
 ### ⬜ Phase 5 — Red-team harness + benchmark + revenue axis
 ### ⬜ Phase 6 — Frontend + demo polish

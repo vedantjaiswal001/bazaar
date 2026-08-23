@@ -3,6 +3,7 @@
 .env.local
 *.pem
 *.key
+.keys/
 secrets/
 
 # Python

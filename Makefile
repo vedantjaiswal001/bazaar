@@ -59,6 +59,10 @@ run: ## Start the FastAPI backend on :8000
 demo: ## Run the scripted end-to-end demo (no Razorpay network needed)
 	$(PY) scripts/demo.py
 
+.PHONY: verify
+verify: ## Phase 3 checkpoint: receipt verify/tamper + audit-chain verify/tamper
+	$(PY) scripts/verify_chain.py
+
 .PHONY: lint
 lint: ## Lint the backend with ruff
 	$(VENV)/bin/ruff check backend
