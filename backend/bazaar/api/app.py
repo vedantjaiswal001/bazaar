@@ -21,7 +21,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -30,12 +30,15 @@ from bazaar.agents.negotiation import negotiate
 from bazaar.agents.seller import SellerAgent
 from bazaar.catalog.seed import seed_default_catalog
 from bazaar.catalog.store import CatalogStore
-from bazaar.config import REPO_ROOT
+from bazaar.config import REPO_ROOT, settings
 from bazaar.crypto.signing import generate_keypair
 from bazaar.db import repository as repo
 from bazaar.db.database import connect, init_db
 from bazaar.ledger.audit_log import verify_chain
 from bazaar.models import Mandate, PriceSource
+from bazaar.razorpay.client import RazorpayClient, RazorpayNotConfigured
+from bazaar.razorpay.settlement import settle
+from bazaar.razorpay.webhooks import handle_event, verify_webhook_signature
 from bazaar.receipt.trust_receipt import verify_receipt_json
 from bazaar.verifier.service import AuthorizationService
 
@@ -61,6 +64,7 @@ class _State:
         self.svc = AuthorizationService(self.conn)
         self.mandates: dict[str, Mandate] = {}
         self.last_nonce: str | None = None
+        self.last_txn_id: str | None = None
 
 
 _state: _State | None = None
@@ -147,9 +151,11 @@ def purchase(body: PurchaseIn) -> dict:
             raise HTTPException(400, "no offer for that sku")
         txn = s.buyer.build_transaction(mandate, offer)
         s.last_nonce = txn.nonce
+        s.last_txn_id = txn.txn_id
         out = s.svc.authorize(txn, offer)
 
     return {
+        "txn_id": txn.txn_id,
         "mandate_id": mandate.mandate_id,
         "mandate": {"cap": mandate.max_amount, "cap_display": _rupees(mandate.max_amount),
                     "categories": list(mandate.allowed_categories),
@@ -272,3 +278,47 @@ def benchmark() -> dict:
     if not path.exists():
         return {"status": "not_run", "hint": "run `make benchmark` to generate the scoreboard"}
     return {"status": "ok", "scoreboard": json.loads(path.read_text(encoding="utf-8"))}
+
+
+class SettleIn(BaseModel):
+    txn_id: str | None = None
+
+
+@app.post("/api/settle")
+def settle_txn(body: SettleIn) -> dict:
+    """Create a Razorpay Test Mode order for an authorized transaction.
+
+    Honest behavior with no keys: returns 'not_configured' rather than pretending.
+    With test keys set (Phase 2), this creates a real order; status stays
+    'pending_settlement' until a verified captured-payment webhook arrives.
+    """
+    with _LOCK:
+        s = state()
+        txn_id = body.txn_id or s.last_txn_id
+        if not txn_id:
+            raise HTTPException(400, "no transaction to settle — run a purchase first")
+        try:
+            result = settle(s.conn, txn_id, RazorpayClient())
+        except RazorpayNotConfigured as exc:
+            return {"status": "not_configured", "txn_id": txn_id, "detail": str(exc)}
+    return {
+        "status": result.status, "txn_id": result.txn_id, "order_id": result.order_id,
+        "amount": result.amount, "detail": result.detail,
+        "key_id": settings.razorpay_key_id,   # public key id only (never the secret)
+    }
+
+
+@app.post("/api/webhook/razorpay")
+async def razorpay_webhook(request: Request) -> dict:
+    """Verified Razorpay webhook endpoint. Signature is checked before any state change."""
+    raw = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    secret = settings.razorpay_webhook_secret
+    if not secret:
+        raise HTTPException(503, "webhook secret not configured (RAZORPAY_WEBHOOK_SECRET)")
+    if not verify_webhook_signature(raw, signature, secret):
+        raise HTTPException(400, "invalid webhook signature")
+    event = json.loads(raw.decode("utf-8"))
+    with _LOCK:
+        result = handle_event(state().conn, event)
+    return {"action": result.action, "txn_id": result.txn_id, "detail": result.detail}

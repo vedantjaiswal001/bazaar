@@ -3,7 +3,7 @@
 Honest build log. A checkpoint is marked complete only when the command actually
 ran successfully. Anything not yet run says so.
 
-## Current phase: Phase 1 done → Phase 3 next (Phase 2 waits on Razorpay keys)
+## Current phase: All phases built. Phase 2 LIVE settlement + GitHub push await Vedant's inputs.
 
 ## Phases
 
@@ -29,8 +29,19 @@ ran successfully. Anything not yet run says so.
     state is passed in. The deterministic core imports nothing from the LLM
     layer (enforced by tests/security/test_module_boundary.py).
 
-### ⬜ Phase 2 — Razorpay Test Mode settlement
-- Needs Vedant's Razorpay **test-mode** API keys. Deferred until then.
+### 🟡 Phase 2 — Razorpay Test Mode settlement (code done; LIVE checkpoint needs keys)
+- razorpay/client.py: real Orders via the official SDK; guardrail refuses any
+  non-`rzp_test_` key. Order creation deduped at our layer (no invented idempotency).
+- razorpay/webhooks.py: HMAC-SHA256 signature verification + idempotent event
+  handling. razorpay/settlement.py: settle() (idempotent, "ambiguous = NOT PAID")
+  + reconcile() (Razorpay = source of truth, never re-charge).
+- API: POST /api/settle (honest 'not_configured' without keys), POST
+  /api/webhook/razorpay (verifies signature before any state change).
+- **Tested WITHOUT keys (8 tests):** signature verify pass/fail; ambiguous window
+  defaults to pending; doubled webhook → no double-settle; late webhook → reconcile
+  not re-charge; amount-mismatch rejected; settle() idempotent (one order only).
+- **LIVE checkpoint still pending:** a real test-mode payment settling end-to-end
+  and appearing in the Razorpay dashboard — needs Vedant's test Key ID + Secret.
 
 ### ✅ Phase 3 — Trust Receipt + hash-chained audit log
 - receipt/trust_receipt.py: canonical-JSON, Ed25519-signed receipt per decision.
