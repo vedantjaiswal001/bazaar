@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     amount               INTEGER NOT NULL CHECK (amount >= 0),  -- paise
     price_source         TEXT NOT NULL,        -- 'merchant_record' required to pass the gate
     nonce                TEXT NOT NULL,
-    idempotency_key      TEXT NOT NULL UNIQUE, -- double-charge defense in the schema
+    idempotency_key      TEXT NOT NULL,        -- double-charge defense: partial unique index below
     decision             TEXT NOT NULL DEFAULT 'PENDING',  -- ALLOW / REVIEW / BLOCK / PENDING
     reason_code          TEXT NOT NULL DEFAULT 'PENDING',
     status               TEXT NOT NULL DEFAULT 'pending',  -- pending/authorized/blocked/settled/failed
@@ -134,6 +134,12 @@ CREATE TABLE IF NOT EXISTS attack_runs (
     details           TEXT NOT NULL DEFAULT '{}',
     created_at        TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+-- Double-charge defense, in the schema: an idempotency key may be AUTHORIZED at
+-- most once. Blocked attempts (the double-charge attack itself) may reuse a key;
+-- a second ALLOW with the same key is refused by the database.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_txn_idem_allow
+    ON transactions(idempotency_key) WHERE decision = 'ALLOW';
 
 CREATE INDEX IF NOT EXISTS idx_txn_mandate ON transactions(mandate_id);
 CREATE INDEX IF NOT EXISTS idx_attack_runs_run ON attack_runs(run_id);

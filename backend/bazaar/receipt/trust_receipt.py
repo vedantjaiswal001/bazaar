@@ -7,7 +7,7 @@ single field makes verification fail — the cryptography is real, not decorativ
 from __future__ import annotations
 
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Any
 
 from bazaar.crypto.signing import sign_object, verify_object

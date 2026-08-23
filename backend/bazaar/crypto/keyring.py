@@ -7,7 +7,6 @@ file so receipts stay verifiable across runs. Secrets never enter git.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 from bazaar.config import REPO_ROOT
 from bazaar.crypto.signing import generate_keypair, verify_key_for

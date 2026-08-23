@@ -38,7 +38,20 @@ ran successfully. Anything not yet run says so.
 - **Checkpoint (`make verify`, actual run):** receipt verify=True, then tamper→False;
   audit chain verify ok=True over 6 entries, then edit seq=4 → ok=False, broken_at_seq=4.
 - `make test` → 28 passed.
-### ⬜ Phase 4 — Agents + merchant catalog + bounded negotiation
+### ✅ Phase 4 — Agents + merchant catalog + bounded negotiation
+- catalog/store.py: merchant of record. Seller gets a read-only SellerCatalogView
+  (no write methods); make_offer() clamps any requested price into [floor, list].
+- intent/compiler.py: deterministic, reproducible NL→mandate-draft parser; the
+  LLM parser is pluggable and falls back to rules (no API key needed).
+- agents/buyer.py, seller.py, negotiation.py: human-confirmation-then-sign; one
+  bounded negotiation round clamped to buyer cap AND seller floor (both visible).
+- verifier/service.py: DB-backed adapter — gate + risk + receipt + audit + the
+  DB UNIQUE backstops for replay/double-charge.
+- **Checkpoint (`make demo`, actual run):** full happy path intent→confirm→
+  negotiate(inside two walls: cap ₹5,000 / floor ₹4,500, upsold to PRO)→verifier
+  ALLOW (11/11 checks) → receipt verifies → audit chain intact. Live attacks
+  returned MANDATE_LIMIT_EXCEEDED, CATEGORY_OUTSIDE_MANDATE, UNTRUSTED_INSTRUCTION,
+  NONCE_REPLAY. `make test` → 44 passed.
 ### ⬜ Phase 5 — Red-team harness + benchmark + revenue axis
 ### ⬜ Phase 6 — Frontend + demo polish
 
