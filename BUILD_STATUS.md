@@ -20,8 +20,9 @@ ran successfully. Anything not yet run says so.
 - **Checkpoint result (actual, from a run on this machine):**
   - `make test` → 20 passed (unit gate truth-table for all 9 attack classes +
     crypto tamper tests + module-boundary test + property tests).
-  - `make fuzz` (50,000 iterations, seed 205585394):
-    - ALLOW / REVIEW / BLOCK = 13,244 / 0 / 36,756
+  - `make fuzz` (default 20,000 states; the fuzzer seed varies per run, the
+    ALLOW/BLOCK split varies with it, and the violation count is always 0):
+    - a representative run: ALLOW / REVIEW / BLOCK = 5,355 / 0 / 14,645
     - **spend-cap violations = 0** (actual count, not pre-written)
     - price-mismatch escapes = 0
     - all 8 block reason codes + OK exercised.
@@ -84,7 +85,7 @@ ran successfully. Anything not yet run says so.
   uvicorn confirmed happy-path ALLOW and budget-attack BLOCK over HTTP; Playwright
   screenshots of all six screens captured to docs/screens/. Every screen drives
   the real gate/receipts/benchmark - nothing mocked.
-- 66 tests total (incl. API integration) all green.
+- 77 tests total (incl. API integration) all green.
 
 ## Known constraints
 - Razorpay network settlement can only be validated once test keys are provided

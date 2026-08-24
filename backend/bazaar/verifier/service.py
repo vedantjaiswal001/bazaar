@@ -68,8 +68,10 @@ class AuthorizationService:
             # The advisory risk signal may TIGHTEN an ALLOW to a human-review hold.
             # A held transaction is recorded but is NOT settleable until approved
             # (settle() refuses status 'review_hold') - so the signal is enforced,
-            # not merely displayed.
-            held = apply_risk(result, risk).decision == Decision.REVIEW.value
+            # not merely displayed. We hold on ANY risk escalation away from a clean
+            # ALLOW (REVIEW today; a future risk BLOCK would hold too), so the enforced
+            # state can never be looser than the effective decision.
+            held = apply_risk(result, risk).decision != Decision.ALLOW.value
             status = "review_hold" if held else "authorized"
             # The database has the final say on replay / double-charge.
             try:

@@ -16,11 +16,12 @@ system, and every number in the scoreboard is produced by a command you can run.
 
 - **Adversarial set (100-200):** scripted attacks, labeled by class, each with an
   expected verdict and expected reason code.
-- **Legitimate set (300-500):** generated from a distribution over amounts,
-  categories, return policies, and velocities - **sampled independently of the
-  policy thresholds**, and deliberately including **boundary cases** (₹4,950
-  against a ₹5,000 cap; a return of exactly 30 days). This measures the
-  false-block rate where it actually matters: at the edges.
+- **Legitimate set (300-500):** generated from a distribution over amounts and
+  categories - **sampled independently of the policy thresholds** - with varied
+  caps and multi-category allowlists, and deliberately including **amount boundary
+  cases** that must still pass: exactly at the cap, one paisa under it (cap - 100),
+  and cap - 5,000. This measures the false-block rate where it actually matters:
+  at the edges of the spend cap.
 
 ## Disciplines that make the numbers credible
 

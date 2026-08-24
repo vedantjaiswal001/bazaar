@@ -1,12 +1,18 @@
 """Append-only, hash-chained audit log - tamper-evident without a blockchain.
 
-Each entry commits to the previous entry's hash:
+Each entry commits to the previous entry's hash AND its own event_type + payload:
 
-    entry_hash = SHA-256( prev_hash_hex || JCS(payload) )
+    entry_hash = SHA-256( prev_hash_hex || event_type || JCS(payload) )
 
-so altering any past payload breaks every subsequent hash. `verify_chain` walks
-the log and returns the exact seq where it first breaks, if any. This is how
-"every authorization is reproducible from the audit log" is made checkable.
+so altering any past entry's event_type or payload breaks its hash and every
+subsequent hash. `verify_chain` walks the log and returns the exact seq where it
+first breaks, if any. This is how "every authorization is reproducible from the
+audit log" is made checkable.
+
+Scope note (honest): this detects any modification or reordering of retained
+entries. It does not by itself detect truncation of the most-recent entries -
+that requires anchoring the tip externally (out of scope here, named as future
+work). We never claim more than the construction provides.
 """
 from __future__ import annotations
 
@@ -20,8 +26,10 @@ from bazaar.config import GENESIS_HASH
 from bazaar.crypto.jcs import canonicalize
 
 
-def _hash(prev_hash: str, payload_bytes: bytes) -> str:
-    return hashlib.sha256(prev_hash.encode("ascii") + payload_bytes).hexdigest()
+def _hash(prev_hash: str, event_type: str, payload_bytes: bytes) -> str:
+    return hashlib.sha256(
+        prev_hash.encode("ascii") + event_type.encode("utf-8") + payload_bytes
+    ).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -43,7 +51,7 @@ def append_event(conn: sqlite3.Connection, event_type: str, payload: dict[str, A
         "SELECT entry_hash FROM audit_logs ORDER BY seq DESC LIMIT 1"
     ).fetchone()
     prev_hash = tip["entry_hash"] if tip else GENESIS_HASH
-    entry_hash = _hash(prev_hash, body)
+    entry_hash = _hash(prev_hash, event_type, body)
 
     cur = conn.execute(
         "INSERT INTO audit_logs (event_type, payload, prev_hash, entry_hash) VALUES (?, ?, ?, ?)",
@@ -70,11 +78,11 @@ class ChainResult:
 def verify_chain(conn: sqlite3.Connection) -> ChainResult:
     """Verify the whole chain. Returns the first broken seq if tampering is found."""
     rows = conn.execute(
-        "SELECT seq, payload, prev_hash, entry_hash FROM audit_logs ORDER BY seq ASC"
+        "SELECT seq, event_type, payload, prev_hash, entry_hash FROM audit_logs ORDER BY seq ASC"
     ).fetchall()
     prev = GENESIS_HASH
     for r in rows:
-        expected = _hash(prev, r["payload"].encode("utf-8"))
+        expected = _hash(prev, r["event_type"], r["payload"].encode("utf-8"))
         if r["prev_hash"] != prev:
             return ChainResult(False, len(rows), r["seq"], "prev_hash does not match chain tip")
         if r["entry_hash"] != expected:

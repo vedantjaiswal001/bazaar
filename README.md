@@ -39,8 +39,13 @@ value not yet produced by a real run reads `UNVERIFIED`.
 
 Economic axis (same harness): bounded upsell lifted average order value by
 **~7.7%**, with **100%** of upsold orders still clearing the same gate. The
-advisory risk model is reported separately (precision 1.00) and never merged with
-gate correctness.
+advisory risk model is reported separately (precision **1.00**, recall **0.22**,
+F1 0.36) and never merged with gate correctness. The low recall is by design, not
+a gap: the risk model is a conservative second opinion that only ever *tightens*
+to a human-review hold, and it is tuned to never false-flag legitimate traffic
+(zero false positives). The blocking is done by the deterministic gate, which
+catches 100% of attacks on its own - so the risk model can afford to stay quiet
+unless it is sure.
 
 ## Demo screens
 

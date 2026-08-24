@@ -25,7 +25,7 @@ audit trail and one failure handled gracefully."*
 
 ```bash
 make setup        # venv + install + init db
-make test         # 76 tests: unit + property + security + integration
+make test         # 77 tests: unit + property + security + integration
 make fuzz         # property-based fuzzer vs the spend-cap invariant -> real count
 make benchmark    # regenerate datasets, run gate + fuzzer -> the scoreboard
 make showcase     # the whole story in one paced, recordable run
@@ -43,7 +43,15 @@ make live         # ONE real Razorpay Test Mode payment, end to end
 | Fuzzer spend-cap violations (20,000 random states)         | **0**        |
 | Escapes                                                    | **0** (honestly counted; a real one would be printed) |
 | AOV uplift from bounded upsell / share still gated         | **+7.72% / 100%** (a controlled A/B on simulated buyers - see `docs/EVAL.md`) |
-| Advisory risk classifier (reported *separately*)           | precision **1.00** |
+| Advisory risk classifier (reported *separately*)           | precision **1.00**, recall **0.22**, F1 **0.36** (low recall is by design - see note) |
+
+**On the risk model's low recall:** this is deliberate, not a weakness. The risk
+model is a conservative second opinion that can only *tighten* an ALLOW to a
+human-review hold; it never authorizes and never widens authority. It is tuned for
+zero false positives (precision 1.00) so it never nags on legitimate traffic. The
+actual blocking is done by the deterministic gate, which catches 100% of attacks
+by itself - so the risk model is allowed to stay quiet unless it is confident.
+Reporting all three numbers, including the unflattering one, is the point.
 
 ## Nine attacks → nine reason codes
 

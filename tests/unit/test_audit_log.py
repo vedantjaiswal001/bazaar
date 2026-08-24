@@ -40,3 +40,17 @@ def test_reordering_hashes_breaks_the_chain(db):
     result = verify_chain(db)
     assert not result.ok
     assert result.broken_at_seq in (2, 3)
+
+
+def test_tampering_the_event_type_breaks_the_chain(db):
+    """event_type is folded into the hash, so relabeling a past entry is caught
+    even if its payload is left untouched."""
+    for i in range(5):
+        append_event(db, "authorization", {"txn": f"t{i}"})
+    # Attacker relabels seq 3 (e.g. 'authorization' -> 'settlement') but leaves the
+    # payload alone. Because event_type is hashed, this is still detected.
+    db.execute("UPDATE audit_logs SET event_type = 'settlement' WHERE seq = 3")
+    db.commit()
+    result = verify_chain(db)
+    assert not result.ok
+    assert result.broken_at_seq == 3
