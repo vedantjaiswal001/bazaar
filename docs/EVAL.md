@@ -19,9 +19,10 @@ system, and every number in the scoreboard is produced by a command you can run.
 - **Legitimate set (300-500):** generated from a distribution over amounts and
   categories - **sampled independently of the policy thresholds** - with varied
   caps and multi-category allowlists, and deliberately including **amount boundary
-  cases** that must still pass: exactly at the cap, one paisa under it (cap - 100),
-  and cap - 5,000. This measures the false-block rate where it actually matters:
-  at the edges of the spend cap.
+  cases** that must still pass: exactly at the cap, one rupee under it
+  (cap - 100 paise = ₹4,999 against a ₹5,000 cap), and ₹50 under it
+  (cap - 5,000 paise = ₹4,950). This measures the false-block rate where it
+  actually matters: at the edges of the spend cap.
 
 ## Disciplines that make the numbers credible
 
@@ -64,7 +65,10 @@ The honest reading matters more than the digit, so it is spelled out here.
 | Behavioral classifier| precision / recall / F1 for the risk model - reported separately       |
 | Economic value      | AOV uplift from bounded upsell; share of uplift that still cleared the gate |
 | Integrity           | fuzzer: actual violation count against the spend-cap invariant          |
-| System              | authorization latency; Razorpay test transaction success rate           |
+
+Every row above is printed by `make benchmark`. Razorpay Test Mode settlement is
+proven separately and live by `make live` (it needs real `rzp_test_` keys, so it
+is not part of the keyless benchmark).
 
 **One command** regenerates the datasets, reruns the gate and the fuzzer, and
 prints the scoreboard - including any real escape. Reproducibility is the

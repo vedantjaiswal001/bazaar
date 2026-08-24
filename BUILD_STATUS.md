@@ -3,7 +3,7 @@
 Honest build log. A checkpoint is marked complete only when the command actually
 ran successfully. Anything not yet run says so.
 
-## Current phase: All phases built. Phase 2 LIVE settlement + GitHub push await Vedant's inputs.
+## Current phase: All phases complete, including the live Razorpay Test Mode payment. Pushed to GitHub.
 
 ## Phases
 
@@ -25,12 +25,14 @@ ran successfully. Anything not yet run says so.
     - a representative run: ALLOW / REVIEW / BLOCK = 5,355 / 0 / 14,645
     - **spend-cap violations = 0** (actual count, not pre-written)
     - price-mismatch escapes = 0
-    - all 8 block reason codes + OK exercised.
+    - 7 of the 9 BLOCK reason codes + OK exercised (the fuzzer's random states
+      never construct a forged-issuer or off-category case; those two are covered
+      by the unit truth-table and the red-team harness).
   - The gate is a PURE FUNCTION (no I/O), so it is exhaustively fuzzable; DB
     state is passed in. The deterministic core imports nothing from the LLM
     layer (enforced by tests/security/test_module_boundary.py).
 
-### 🟡 Phase 2 - Razorpay Test Mode settlement (code done; LIVE checkpoint needs keys)
+### ✅ Phase 2 - Razorpay Test Mode settlement (LIVE payment completed)
 - razorpay/client.py: real Orders via the official SDK; guardrail refuses any
   non-`rzp_test_` key. Order creation deduped at our layer (no invented idempotency).
 - razorpay/webhooks.py: HMAC-SHA256 signature verification + idempotent event
@@ -41,8 +43,11 @@ ran successfully. Anything not yet run says so.
 - **Tested WITHOUT keys (8 tests):** signature verify pass/fail; ambiguous window
   defaults to pending; doubled webhook → no double-settle; late webhook → reconcile
   not re-charge; amount-mismatch rejected; settle() idempotent (one order only).
-- **LIVE checkpoint still pending:** a real test-mode payment settling end-to-end
-  and appearing in the Razorpay dashboard - needs Vedant's test Key ID + Secret.
+- **LIVE checkpoint DONE (2026-08-24):** `make live` created a real Test Mode order
+  on api.razorpay.com, a payment was captured through Razorpay Checkout, and
+  reconcile settled the transaction exactly once; a repeated settle + reconcile
+  refused to double-charge (idempotency proven live). Reproduce with your own
+  `rzp_test_` keys via `make live`.
 
 ### ✅ Phase 3 - Trust Receipt + hash-chained audit log
 - receipt/trust_receipt.py: canonical-JSON, Ed25519-signed receipt per decision.
@@ -88,8 +93,10 @@ ran successfully. Anything not yet run says so.
 - 77 tests total (incl. API integration) all green.
 
 ## Known constraints
-- Razorpay network settlement can only be validated once test keys are provided
-  and the Razorpay API is reachable from the run environment.
+- Razorpay network settlement is validated on a machine that has the author's
+  `rzp_test_` keys and network reach to the Razorpay API (done via `make live`
+  on 2026-08-24). It cannot run inside a keyless or offline CI sandbox, so the
+  in-repo test suite exercises it against a faithful fake instead.
 
 ## Log
 - Phase 0 files created; `make setup` checkpoint output recorded in the commit

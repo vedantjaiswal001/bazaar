@@ -34,6 +34,14 @@ Give an autonomous agent a payment rail and the danger is not that it *can't* bu
 
 LLMs **propose**. Policies **constrain**. A deterministic verifier **authorizes**. Razorpay **executes**. Receipts **prove**. A red team **attacks it on every run**. The agent literally cannot escalate its own authority - and every refusal comes back as a specific, machine-readable reason code, never "the AI decided no."
 
+## See it run
+
+<div align="center">
+<img src="docs/demo.svg" alt="Recording of make showcase: a legitimate purchase clears the 11-check gate, a tampered receipt fails verification, nine attacks are each blocked with a reason code, the audit chain detects tampering, and the honest scoreboard prints" width="840">
+</div>
+
+<div align="center"><sub>A real recording of <code>make showcase</code> - one command runs the whole story: a purchase clears the gate, a tampered receipt fails, nine attacks are blocked, and the scoreboard is computed live.</sub></div>
+
 ## How the gate decides
 
 <div align="center">
@@ -52,9 +60,10 @@ Every figure here is printed by `make benchmark` - reproduce them yourself. Bloc
 | False-block rate on legitimate traffic (400, incl. boundary cases) | **0%** |
 | Held-out result (72 fresh, unseen attacks) | **100%** block, 0% false-block |
 | Fuzzer: spend-cap violations over 20,000 random states | **0** |
-| Live Razorpay Test Mode payment (order + capture + reconcile) | **verified** |
 
 Economic axis (same harness, no new engine): the seller's **bounded** upsell lifted average order value by **~7.7%**, with **100%** of upsold orders still clearing the same gate - a safe gate that does not kill revenue. The advisory risk model is reported separately (precision **1.00**, recall **0.22**, F1 0.36): the low recall is by design, because the deterministic gate does the blocking and the risk model is tuned to never false-flag legitimate traffic. See [`docs/EVAL.md`](docs/EVAL.md).
+
+**Live settlement is proven, not simulated.** `make live` runs one real Razorpay Test Mode order end to end - a captured payment and a reconcile that settles exactly once, with a repeated attempt refusing to double-charge. It is the one result you reproduce with your own `rzp_test_` keys rather than from the repo alone (the in-repo tests exercise the same flow against a faithful fake).
 
 ## Nine attacks, nine reason codes
 
@@ -121,7 +130,7 @@ Six screens (React + TypeScript + Vite), each driving the real backend - nothing
 ## What BAZAAR builds - six components
 
 1. **Intent Compiler and Signed Mandate** - natural-language request to structured mandate; the human confirms the rendered mandate, then it is Ed25519-signed and locked with a generous but bounded TTL. The agent never holds the signing key.
-2. **Deterministic Authorization Gate** - the heart: a fixed 11-check checklist (signature by a trusted issuer, category, price == merchant of record, unexpired, not frozen, nonce unused, not already executed, amount within cap) to ALLOW or one reason code.
+2. **Deterministic Authorization Gate** - the heart: a fixed 11-check checklist (signature by a trusted issuer, mandate binds the agent, not expired, agent not frozen, money-field is merchant-sourced, record exists, price == merchant of record, category in allowlist, amount within the cap, nonce unused, not already executed) to ALLOW or one reason code.
 3. **Buyer and Seller Agents + Bounded Negotiation** - one negotiation round clamped between the buyer's cap and the seller's floor, both visible on screen.
 4. **Razorpay Test-Mode Settlement** - real Orders + Payments with idempotency and verified webhooks; the ambiguous window defaults to "not paid," reconciles from Razorpay, and never re-charges.
 5. **Trust Receipt + Hash-Chained Audit Log** - every authorization emits a signed receipt; each log entry chains the previous entry's hash, making the whole log tamper-evident without a blockchain.

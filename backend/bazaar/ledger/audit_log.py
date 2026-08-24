@@ -1,8 +1,9 @@
 """Append-only, hash-chained audit log - tamper-evident without a blockchain.
 
-Each entry commits to the previous entry's hash AND its own event_type + payload:
+Each entry commits to the previous entry's hash AND its own event_type + payload,
+with a field separator so the (event_type, payload) boundary is unambiguous:
 
-    entry_hash = SHA-256( prev_hash_hex || event_type || JCS(payload) )
+    entry_hash = SHA-256( prev_hash_hex || event_type || 0x1f || JCS(payload) )
 
 so altering any past entry's event_type or payload breaks its hash and every
 subsequent hash. `verify_chain` walks the log and returns the exact seq where it
@@ -27,8 +28,10 @@ from bazaar.crypto.jcs import canonicalize
 
 
 def _hash(prev_hash: str, event_type: str, payload_bytes: bytes) -> str:
+    # 0x1f (ASCII unit separator) delimits event_type from the payload so the two
+    # fields cannot be re-partitioned into a different (event_type, payload) pair.
     return hashlib.sha256(
-        prev_hash.encode("ascii") + event_type.encode("utf-8") + payload_bytes
+        prev_hash.encode("ascii") + event_type.encode("utf-8") + b"\x1f" + payload_bytes
     ).hexdigest()
 
 

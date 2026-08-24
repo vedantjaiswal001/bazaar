@@ -20,8 +20,8 @@ make benchmark             # generates the scoreboard the UI reads
 For the live payment moment, have `.env` filled with your Razorpay **Test Mode**
 keys and `pip install razorpay python-dotenv` done inside the venv.
 
-Screen-recording tip: a dark terminal, ~16pt font, and `make showcase --pace`
-(built-in pauses) make a clean one-take recording.
+Screen-recording tip: a dark terminal, ~16pt font, and `make showcase` (it has
+built-in pauses via `--pace 0.6`) make a clean one-take recording.
 
 ---
 
