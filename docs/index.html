@@ -438,15 +438,18 @@
     return { sku, list:r.price, floor:lower, cap, agreed, upsold: sku!==baseSku, within: (lower<=agreed && agreed<=Math.min(r.price,cap)), transcript };
   }
 
-  const CHECK_NAMES = ["mandate_signature_valid","mandate_not_expired","agent_not_frozen","money_field_from_merchant_record","merchant_record_exists","price_equals_merchant_record","category_in_allowlist","amount_within_cap","nonce_unused","idempotency_key_unused"];
+  const CHECK_NAMES = ["mandate_signed_by_trusted_issuer","mandate_agent_matches","mandate_not_expired","agent_not_frozen","money_field_from_merchant_record","merchant_record_exists","price_equals_merchant_record","category_in_allowlist","amount_within_cap","nonce_unused","idempotency_key_unused"];
 
   async function authorize(txn, offer, st){
     const checks = [];
     const ok = (n,d="")=>checks.push({name:n,passed:true,detail:d});
     const done = (reason,detail)=>({decision:"BLOCK",reason,detail,checks});
     const sigOk = await mandateValid(txn.mandate);
-    checks.push({name:"mandate_signature_valid",passed:sigOk});
-    if(!sigOk) return done("MANDATE_IMMUTABLE","a signed field was altered");
+    checks.push({name:"mandate_signed_by_trusted_issuer",passed:sigOk});
+    if(!sigOk) return done("MANDATE_IMMUTABLE","a signed field was altered, or the key is not the trusted issuer's");
+    const agentOk = txn.agent_id === txn.mandate.agent;
+    checks.push({name:"mandate_agent_matches",passed:agentOk});
+    if(!agentOk) return done("MANDATE_IMMUTABLE","transaction agent does not match the mandate's agent");
     const expired = nowMs() > txn.mandate.expires_at;
     checks.push({name:"mandate_not_expired",passed:!expired});
     if(expired) return done("MANDATE_EXPIRED","mandate past its time-to-live");
@@ -537,7 +540,7 @@
     const upsell = $("#upsell").checked;
     const neg = negotiate(state.mandate.max_amount, "SKU-SHOE-01", upsell);
     const offer = { ...CATALOG[neg.sku], price: neg.agreed };
-    const txn = { id:"t-"+uid(), mandate:state.mandate, sku:neg.sku, amount:neg.agreed, price_source:"merchant_record", nonce:uid(), idem:uid() };
+    const txn = { id:"t-"+uid(), agent_id:"buyer-1", mandate:state.mandate, sku:neg.sku, amount:neg.agreed, price_source:"merchant_record", nonce:uid(), idem:uid() };
     const st = { nonceSeen:false, idemSeen:false, frozen:false };
     const r = await authorize(txn, offer, st);
     if(r.decision==="ALLOW"){ state.usedNonces.add(txn.nonce); state.usedIdem.add(txn.idem); }
@@ -625,7 +628,7 @@
   async function fire(cls){
     const m = await ensureMandate();
     let offer, txn, st = { nonceSeen:false, idemSeen:false, frozen:false }, mandate = m;
-    const base = { id:"t-"+uid(), price_source:"merchant_record", nonce:uid(), idem:uid() };
+    const base = { id:"t-"+uid(), agent_id:"buyer-1", price_source:"merchant_record", nonce:uid(), idem:uid() };
     if(cls==="budget"){ offer={...CATALOG["SKU-SHOE-LUX"]}; txn={...base,mandate,sku:offer.sku,amount:offer.price}; }
     else if(cls==="category"){ offer={...CATALOG["SKU-WATCH-9"]}; txn={...base,mandate,sku:offer.sku,amount:offer.price}; }
     else if(cls==="injection"){ offer={...CATALOG["SKU-SHOE-INJ"]}; txn={...base,mandate,sku:offer.sku,amount:offer.price,price_source:"description"}; }
