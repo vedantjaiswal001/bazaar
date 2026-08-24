@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" width="1280" height="620" font-family="'Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif" role="img" aria-label="Anatomy of one authorization: a fixed eleven-check gate that returns ALLOW or a machine-readable BLOCK reason code">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e15"/>
+      <stop offset="1" stop-color="#110f18"/>
+    </linearGradient>
+    <linearGradient id="coral2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff9270"/><stop offset="1" stop-color="#ef4a37"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="6" y="6" width="1268" height="608" rx="26" fill="url(#bg2)" stroke="#232b3a" stroke-width="1.5"/>
+
+  <text x="48" y="66" font-size="30" font-weight="800" fill="#eef2f8">Anatomy of one authorization</text>
+  <text x="49" y="98" font-size="17" fill="#95a0b3">A fixed checklist evaluated top to bottom. All pass -&gt; ALLOW. The first failing check names the block. No scores, no vibes.</text>
+
+  <!-- input chip -->
+  <g transform="translate(48,270)">
+    <rect width="196" height="96" rx="14" fill="#151a25" stroke="#2a3243"/>
+    <text x="98" y="34" text-anchor="middle" font-size="12.5" font-weight="700" letter-spacing="1.3" fill="#8f9bb0">INPUT</text>
+    <text x="98" y="58" text-anchor="middle" font-size="15.5" font-weight="600" fill="#e9eef7">signed mandate</text>
+    <text x="98" y="78" text-anchor="middle" font-size="15.5" font-weight="600" fill="#e9eef7">+ merchant offer</text>
+  </g>
+  <g stroke="#3b465c" stroke-width="2" fill="none"><path d="M244 318 h44"/></g>
+  <path d="M288 312 l11 6 l-11 6 z" fill="#ff6a53"/>
+
+  <!-- gate card -->
+  <g transform="translate(302,132)">
+    <rect width="590" height="372" rx="18" fill="#12151d" stroke="#2a3243"/>
+    <rect width="590" height="46" rx="18" fill="#1b1620"/>
+    <rect y="30" width="590" height="16" fill="#1b1620"/>
+    <text x="24" y="30" font-size="14" font-weight="800" letter-spacing="1.4" fill="#ff8a72">DETERMINISTIC GATE</text>
+    <text x="566" y="30" text-anchor="end" font-size="13" fill="#8f9bb0">11 checks</text>
+
+    <!-- checks: two columns -->
+    <g font-size="15" fill="#d7deea">
+      <!-- col 1 -->
+      <g transform="translate(26,86)">
+        <g><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">signature by trusted issuer</text></g>
+        <g transform="translate(0,42)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">mandate binds this agent</text></g>
+        <g transform="translate(0,84)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">mandate not expired</text></g>
+        <g transform="translate(0,126)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">agent not frozen</text></g>
+        <g transform="translate(0,168)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">money-field is merchant-sourced</text></g>
+        <g transform="translate(0,210)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">merchant record exists</text></g>
+      </g>
+      <!-- col 2 -->
+      <g transform="translate(340,86)">
+        <g><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">price == merchant record</text></g>
+        <g transform="translate(0,42)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">category in allowlist</text></g>
+        <g transform="translate(0,84)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">amount &lt;= signed cap</text></g>
+        <g transform="translate(0,126)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">nonce unused (replay)</text></g>
+        <g transform="translate(0,168)"><circle cx="9" cy="-5" r="9" fill="#13291d" stroke="#1f7a45"/><path d="M4.5 -5 l3 3 l6 -6.5" stroke="#5fe08a" stroke-width="2" fill="none"/><text x="28" y="0">idempotency key unused</text></g>
+        <g transform="translate(0,210)"><text x="0" y="0" font-size="13.5" fill="#8f9bb0">any one fails -&gt; evaluation stops</text></g>
+      </g>
+    </g>
+  </g>
+
+  <!-- outcomes -->
+  <g stroke="#3b465c" stroke-width="2" fill="none">
+    <path d="M892 250 h40"/><path d="M892 400 h40"/>
+  </g>
+  <path d="M932 244 l11 6 l-11 6 z" fill="#5fe08a"/>
+  <path d="M932 394 l11 6 l-11 6 z" fill="#ff6a53"/>
+
+  <g transform="translate(944,206)">
+    <rect width="286" height="90" rx="14" fill="#10231a" stroke="#1f7a45"/>
+    <text x="22" y="36" font-size="24" font-weight="800" fill="#5fe08a">ALLOW</text>
+    <text x="22" y="64" font-size="14.5" fill="#a9d9bd">all 11 pass -&gt; signed Trust Receipt</text>
+  </g>
+  <g transform="translate(944,356)">
+    <rect width="286" height="112" rx="14" fill="#2a1518" stroke="#8a2f2f"/>
+    <text x="22" y="36" font-size="24" font-weight="800" fill="#ff8f84">BLOCK</text>
+    <text x="22" y="63" font-size="14.5" fill="#e6b3ad">first failing check emits its</text>
+    <text x="22" y="84" font-size="14.5" font-weight="700" fill="#ffb3aa">machine-readable reason code</text>
+  </g>
+
+  <!-- reason code ribbon -->
+  <text x="48" y="556" font-size="13" fill="#7f8ba0">9 BLOCK codes:  MANDATE_LIMIT_EXCEEDED · MANDATE_IMMUTABLE · PRICE_MISMATCH_MERCHANT_RECORD · NONCE_REPLAY · DUPLICATE_TRANSACTION</text>
+  <text x="48" y="580" font-size="13" fill="#7f8ba0">CATEGORY_OUTSIDE_MANDATE · UNTRUSTED_INSTRUCTION · AGENT_FROZEN · MANDATE_EXPIRED   -   one attack class each, every one measured by the benchmark</text>
+</svg>
