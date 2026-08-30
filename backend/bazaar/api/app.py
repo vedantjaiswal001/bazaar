@@ -17,6 +17,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -25,10 +26,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from bazaar.adapters.ap2 import AP2VerificationError, to_bazaar, verify_cart_mandate
+from bazaar.agents.ap2_buyer import AP2ShoppingAgent, tamper_signature
 from bazaar.agents.buyer import BuyerAgent
 from bazaar.agents.issuer import Issuer
 from bazaar.agents.negotiation import negotiate
 from bazaar.agents.seller import SellerAgent
+from bazaar.catalog.attestation import MerchantSigner, signed_offer, verify_price_attestation
 from bazaar.catalog.seed import seed_default_catalog
 from bazaar.catalog.store import CatalogStore
 from bazaar.config import REPO_ROOT, settings
@@ -61,8 +65,21 @@ class _State:
         self.issuer = Issuer()                       # trusted human authority (signs mandates)
         self.buyer = BuyerAgent("buyer-1")           # proposes only; holds no signing key
         repo.register_agent(self.conn, "buyer-1", "Buyer One", "buyer")
-        # Pin the gate to the issuer key: a mandate signed by anything else is a forgery.
-        self.svc = AuthorizationService(self.conn, trusted_issuer_keys={self.issuer.public_key})
+        # --- AP2 rail: a trust bridge + a registered credential provider ---
+        # The bridge is a pinned trusted issuer; it only mints a BAZAAR mandate
+        # AFTER a Cart Mandate verifies. The demo credential provider's ES256 key
+        # is registered by kid so the merchant can trust carts it signs.
+        self.ap2_issuer = Issuer()
+        self.ap2_agent = AP2ShoppingAgent(cp_id="cp-athleto-1")
+        self.ap2_trusted_keys = {self.ap2_agent.kid: self.ap2_agent.public_pem}
+        # --- merchant-as-signer: the merchant signs the price it will honour ---
+        self.merchant_signer = MerchantSigner("merch-athleto")
+        self.trusted_merchant_keys = {self.merchant_signer.public_key}
+        # Pin the gate to BOTH issuer keys: a mandate signed by anything else is a forgery.
+        self.svc = AuthorizationService(
+            self.conn,
+            trusted_issuer_keys={self.issuer.public_key, self.ap2_issuer.public_key},
+        )
         self.mandates: dict[str, Mandate] = {}
         self.last_nonce: str | None = None
         self.last_txn_id: str | None = None
@@ -105,6 +122,87 @@ def _checks(result) -> list[dict]:
 
 def _rupees(paise: int) -> str:
     return f"₹{paise / 100:,.2f}"
+
+
+def _cart_view(cart) -> dict:
+    return {
+        "payee": cart.payee_id, "sku": cart.sku, "title": cart.title,
+        "amount": cart.total_amount, "amount_display": _rupees(cart.total_amount),
+        "currency": cart.currency, "budget": cart.max_amount,
+        "budget_display": _rupees(cart.max_amount),
+        "issuer_kid": cart.issuer_kid, "expires_at": cart.expires_at,
+    }
+
+
+def _run_ap2(s: _State, token: str) -> dict:
+    """Verify a Cart Mandate, translate it, and run it through the SAME gate."""
+    try:
+        cart = verify_cart_mandate(token, s.ap2_trusted_keys)
+    except AP2VerificationError as exc:
+        # Authenticity failed - the request never reaches the money gate.
+        return {"rail": "AP2", "verified": False, "stage": "mandate_verification",
+                "decision": "BLOCK", "reason": exc.reason, "detail": exc.detail}
+    record = s.store.get(cart.sku)
+    # Merchant-as-signer: the merchant signs the price it will honour, and the
+    # gate then authorises against that SIGNED price - a two-sided handshake with
+    # the buyer's signed cart.
+    integrity = {"buyer_signed": True, "merchant_signed": False}
+    if record is not None:
+        att = s.merchant_signer.attest(record)
+        ok, att_reason = verify_price_attestation(att, s.trusted_merchant_keys)
+        integrity = {
+            "buyer_signed": True, "merchant_signed": ok,
+            "attestation_id": att.attestation_id, "attested_price": att.price,
+            "attested_price_display": _rupees(att.price), "reason": att_reason,
+        }
+        if ok:
+            record = signed_offer(record, att)   # gate checks against the signed price
+    try:
+        mandate, txn = to_bazaar(cart, record, s.ap2_issuer)
+    except AP2VerificationError as exc:
+        return {"rail": "AP2", "verified": True, "stage": "mapping",
+                "decision": "BLOCK", "reason": exc.reason, "detail": exc.detail,
+                "cart": _cart_view(cart), "price_integrity": integrity}
+    repo.register_agent(s.conn, txn.agent_id, f"AP2 Buyer {cart.subject}", "buyer")
+    repo.save_mandate(s.conn, mandate)
+    out = s.svc.authorize(txn, record)
+    return {
+        "rail": "AP2", "verified": True, "stage": "gate", "cart": _cart_view(cart),
+        "txn_id": txn.txn_id, "decision": out.result.decision, "reason": out.result.reason,
+        "detail": out.result.detail, "risk_score": out.risk.score,
+        "effective_decision": out.effective_decision, "checks": _checks(out.result),
+        "price_integrity": integrity,
+        "dual_signed": integrity["merchant_signed"] and out.result.decision == "ALLOW",
+        "receipt": out.receipt.to_json(),
+        "razorpay": {"status": "pending", "note": "settle via POST /api/settle"},
+    }
+
+
+def _mint_demo_cart(s: _State, variant: str) -> str:
+    """Sign a demo Cart Mandate: a legit one, or one crafted to be caught."""
+    a = s.ap2_agent
+    sku = "SKU-SHOE-01"
+    rec = s.store.get(sku)
+    price, mid, title = rec.price, rec.merchant_id, rec.title
+    if variant == "legit":
+        return a.sign_cart(sku=sku, title=title, unit_amount=price, merchant_id=mid, budget=500_000)
+    if variant == "price_tamper":   # validly signed, but disagrees with the merchant of record
+        return a.sign_cart(sku=sku, title=title, unit_amount=price - 50_000,
+                           merchant_id=mid, budget=500_000)
+    if variant == "over_budget":    # amount == real price, but above the signed cap
+        return a.sign_cart(sku=sku, title=title, unit_amount=price, merchant_id=mid,
+                           budget=price - 50_000)
+    if variant == "expired":
+        return a.sign_cart(sku=sku, title=title, unit_amount=price, merchant_id=mid,
+                           budget=500_000, exp_override=int(time.time()) - 30)
+    if variant == "signature_tamper":
+        return tamper_signature(a.sign_cart(sku=sku, title=title, unit_amount=price,
+                                            merchant_id=mid, budget=500_000))
+    if variant == "untrusted_issuer":
+        rogue = AP2ShoppingAgent(cp_id="cp-rogue-9")   # never registered with the merchant
+        return rogue.sign_cart(sku=sku, title=title, unit_amount=price, merchant_id=mid,
+                               budget=500_000)
+    raise HTTPException(400, f"unknown AP2 demo variant: {variant}")
 
 
 # ----------------------------- endpoints -----------------------------
@@ -267,6 +365,47 @@ def attack(body: AttackIn) -> dict:
         "detail": out.result.detail, "checks": _checks(out.result),
         "receipt": out.receipt.to_json(),
     }
+
+
+class AP2CheckoutIn(BaseModel):
+    cart_mandate_jwt: str
+
+
+class AP2DemoIn(BaseModel):
+    variant: str = "legit"
+
+
+@app.get("/api/ap2/info")
+def ap2_info() -> dict:
+    """Which credential providers this merchant trusts, and the demo variants."""
+    with _LOCK:
+        s = state()
+        return {
+            "rail": "AP2 (Agent Payments Protocol)", "alg": "ES256",
+            "trusted_credential_providers": list(s.ap2_trusted_keys.keys()),
+            "demo_variants": ["legit", "price_tamper", "over_budget", "expired",
+                              "signature_tamper", "untrusted_issuer"],
+        }
+
+
+@app.post("/api/ap2/checkout")
+def ap2_checkout(body: AP2CheckoutIn) -> dict:
+    """A real AI buyer presents an ES256-signed Cart Mandate; we verify + settle it."""
+    with _LOCK:
+        return _run_ap2(state(), body.cart_mandate_jwt)
+
+
+@app.post("/api/ap2/demo")
+def ap2_demo(body: AP2DemoIn) -> dict:
+    """Mint a demo Cart Mandate (legit or a tamper case) and run it end to end."""
+    with _LOCK:
+        s = state()
+        token = _mint_demo_cart(s, body.variant)
+        result = _run_ap2(s, token)
+    result["variant"] = body.variant
+    # A redacted preview so the UI can show a real signed token without leaking it.
+    result["cart_mandate_preview"] = f"{token[:24]}...{token[-8:]}  (ES256 JWS, {len(token)} chars)"
+    return result
 
 
 @app.post("/api/receipt/verify")

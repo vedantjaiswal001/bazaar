@@ -53,6 +53,14 @@ fuzz: ## Run the spend-cap fuzzer and print the REAL violation count
 benchmark: ## Regenerate datasets, run gate + fuzzer, print the scoreboard
 	$(PY) benchmarks/runner.py
 
+.PHONY: train
+train: ## Train + evaluate the calibrated risk brain
+	$(PY) scripts/train_risk.py
+
+.PHONY: ap2
+ap2: ## AP2 rail conformance demo (real ES256 Cart Mandates)
+	$(PY) scripts/ap2_demo.py
+
 .PHONY: run
 run: ## Start the FastAPI backend on :8000
 	$(PY) -m uvicorn bazaar.api.app:app --reload --port 8000

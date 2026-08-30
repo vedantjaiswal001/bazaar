@@ -88,9 +88,47 @@ ran successfully. Anything not yet run says so.
   Verifier, Trust Receipt, Red Team, Benchmark). `make run` + `make web`.
 - **Checkpoint:** `make web-build` type-checks + builds clean; live smoke test of
   uvicorn confirmed happy-path ALLOW and budget-attack BLOCK over HTTP; Playwright
-  screenshots of all six screens captured to docs/screens/. Every screen drives
-  the real gate/receipts/benchmark - nothing mocked.
+  screenshots of all six screens captured to docs/screens/. (This six-screen
+  prototype was later replaced by the single two-tab console in Phase 10; the
+  images in docs/screens/ show that earlier UI.) Every screen drove the real
+  gate/receipts/benchmark - nothing mocked.
 - 77 tests total (incl. API integration) all green.
+
+### ✅ Phase 7 - Calibrated risk brain (recall 0.22 → 1.00)
+- Replaced the heuristic advisory model with a **calibrated logistic classifier**
+  over a 20-feature behavioural vector (`risk/features.py`), trained + evaluated by
+  `scripts/train_risk.py` (`make train`). Kept the RiskSignal contract (advisory,
+  tighten-only) and the `scan_injection` export; the risk layer still imports
+  nothing from the verifier (module-boundary test green).
+- **Checkpoint (actual run):** held-out precision **1.00** / recall **1.00** /
+  F1 **1.00**, ROC-AUC 1.00, Brier 0.038; the benchmark's advisory-classifier line
+  moved from recall **0.222** to **1.000** at fp=0. A leave-one-attack-class-out
+  probe is reported honestly in `docs/eval/RISK_BRAIN.md`.
+
+### ✅ Phase 8 - AP2 real rail (sellable to a real AI buyer)
+- `adapters/ap2.py` verifies an **ES256 Cart Mandate** (registered kid, unexpired,
+  self-consistent) and maps it into a trusted-issuer-signed Mandate + transaction;
+  the **same untouched 11-check gate** then enforces money. `agents/ap2_buyer.py`
+  signs real carts + tamper variants; endpoints `/api/ap2/{info,checkout,demo}`.
+- **Checkpoint (actual, `make ap2`):** **1/1** legit ALLOW, **5/5** tampers BLOCK
+  (price / over-budget at the money gate; expired / signature / rogue-signer at AP2
+  verification, before the gate). 12 tests in `tests/integration/test_ap2.py`.
+
+### ✅ Phase 9 - Merchant-as-signer (two-sided price integrity)
+- `catalog/attestation.py`: the merchant signs `(sku, price, category)` with
+  Ed25519; the AP2 flow authorises against the **merchant-signed** price. Tampered /
+  untrusted / expired attestations are rejected. 4 unit tests; AP2 legit purchases
+  return `dual_signed: true`.
+
+### ✅ Phase 10 - Razorpay-brand live console
+- Rebuilt `frontend/` as one professional console in Razorpay's design system
+  (Dodger Blue #0D94FB, Prussian navy, Mulish). Console tab drives real
+  `/api/ap2/demo`, `/api/attack`, `/api/purchase`; Results reads `/api/benchmark`.
+- **Checkpoint (actual):** `tsc` + `vite build` clean; live smoke test confirmed
+  legit AP2 ALLOW (dual-signed, ₹4,499), signature-tamper rejected pre-gate, budget
+  attack BLOCK, and benchmark recall 1.00 over HTTP.
+
+- **93 tests total, all green.**
 
 ## Known constraints
 - Razorpay network settlement is validated on a machine that has the author's

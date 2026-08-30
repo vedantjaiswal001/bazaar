@@ -1,110 +1,118 @@
-# BAZAAR - the five-minute demo (run-of-show)
+# The five-minute demo - a three-act story
 
-Open on honesty, not on a shopping cart. The sequence is engineered so the
-senior-engineer moments - the live tamper-fail, the fuzzer, the honest escape
-number, one real Razorpay payment - land hardest. Every screen drives the real
-backend.
+> **Don't trust the agent. Test the authorization boundary.**
 
-There are two ways to record. **Option A** is the safest single take and needs no
-UI. **Option B** is more visual. Pick one; both hit the same beats.
-
----
+Don't demo features in a list. Tell a story in three acts: show the *future*
+(agentic commerce), show the *boundary* (a real payment, authorized and settled),
+then *try to break it* (the adversarial climax). Every screen drives the real
+backend; nothing is mocked.
 
 ## Before you record
 
 ```bash
 make setup                 # once: venv + install + init db
-make benchmark             # generates the scoreboard the UI reads
+make train                 # writes the calibrated risk-model artifact + eval plots
+make benchmark             # generates the scoreboard the Results tab reads
 ```
 
-For the live payment moment, have `.env` filled with your Razorpay **Test Mode**
-keys and `pip install razorpay python-dotenv` done inside the venv.
-
-Screen-recording tip: a dark terminal, ~16pt font, and `make showcase` (it has
-built-in pauses via `--pace 0.6`) make a clean one-take recording.
+For the live payment, put your Razorpay **Test Mode** keys in `.env`. Two ways to
+record: **the console** (`make run` + `make web`, open `localhost:5173`) or **one
+terminal take** (`make showcase`). The console is more visual; the terminal is the
+safest single take. Pick one - both hit the same three acts.
 
 ---
 
-## Option A - one-command terminal demo (recommended, ~4 min)
+## Act 1 - The future (agentic commerce)  ·  0:00-1:15
 
-This is the whole story in two commands. It is the most reliable take because
-nothing depends on a browser or a dev server.
+Open the console (or run `make showcase`). Show an **AI buyer** transacting:
 
-### 0:00-0:20 · The thesis
-Run:
-```bash
-make showcase           # (uses --pace 0.6 for on-screen pauses)
-```
-Read the three header lines aloud: *"LLMs propose, policies constrain, a
-deterministic verifier authorizes - nothing probabilistic can widen authority.
-The agent cannot overspend."*
+- A natural-language intent compiles into a **human-signed** mandate (the agent
+  holds no signing key), and a bounded negotiation settles the price *between* the
+  seller's floor and the buyer's cap.
+- Then the AP2 rail: click **Legit cart** - a **real ES256-signed Cart Mandate**
+  from an AI buyer's credential provider.
 
-| On screen | Say |
-|-----------|-----|
-| **Beat 1** - mandate compiled, Ed25519 signed, negotiation clamped between two walls, verifier ticks all green to `ALLOW`, receipt `valid: True` | "A human signs a spending mandate. The agent negotiates only *between* the cap and the seller's floor. The gate checks every rule and allows it - and signs a receipt." |
-| **Beat 2** - tamper the receipt amount to ₹99,999 → `verifies: False` | "Change one field of that receipt and the signature breaks. The cryptography is real, not decorative." |
-| **Beat 3** - nine attack classes, nine `BLOCK` lines, nine reason codes | "Nine different agents trying to cheat. Each is blocked - and told exactly which rule fired, not 'the AI decided no.'" |
-| **Beat 4** - audit chain intact, then one past entry edited → `first break at seq N` | "The audit log is hash-chained. Edit any past entry and verification points at the exact break." |
-| **Beat 5** - live scoreboard: 100% blocked, 0% false-block, 0 escapes, +7.72% AOV | "And the honest scoreboard, computed in this run: 100% of attacks blocked, zero false blocks on legitimate traffic, zero escapes - and the bounded upsell still lifted order value, every rupee through the same gate." |
+> *"This is agentic commerce. An AI agent finds a merchant, receives a signed
+> offer, and tries to pay - over a real agent-payments protocol."*
 
-### 4:00-5:00 · One real Razorpay payment
-Run:
-```bash
-make live
-```
-
-| On screen | Say |
-|-----------|-----|
-| Gate ALLOWs, then a **real** `order_...` id prints, status `pending_settlement` | "Now the real thing. The gate authorizes, we create a genuine Test Mode order on Razorpay - and until a payment is confirmed, we default to NOT PAID." |
-| Browser opens the checkout; pay with test card `4111 1111 1111 1111` | "I pay with Razorpay's test card. No real money." |
-| Press Enter → reconcile settles once; `settle again` / `reconcile again` → already settled | "We reconcile against Razorpay itself and settle exactly once. Retry it - it never charges twice." |
-| Close: | "Explainable, bounded, gated, audited - and it really touches Razorpay. That's BAZAAR." |
+**Judge thinks:** *okay, this is agentic commerce, and it actually runs.*
 
 ---
 
-## Option B - UI walkthrough (~5 min, more visual)
+## Act 2 - The boundary (authorized, then settled)  ·  1:15-2:45
 
-```bash
-make run                   # backend on :8000  (terminal 1)
-make web                   # frontend on :5173 (terminal 2)
+Now show the authorization itself - the heart of the project:
+
+```
+Buyer authority (signed cap): ₹5,000
+Merchant-signed offer:        ₹4,499
+Category:                     footwear   ✓
+Expiry:                       valid      ✓
+Amount ≤ cap · price = record · nonce fresh · not replayed ...
+→ 11/11 checks pass → ALLOW  ·  dual-signed
 ```
 
-### 0:00-0:30 · Hook - open mid-attack
-Open on the **Red Team** screen. Click **Fire all 9**. Nine cards light `BLOCK`
-with nine reason codes. *"These are AI agents trying to spend money they weren't
-authorized to. This is the gate stopping each one, and naming the rule."*
+- The **Trust Receipt** verifies (`VALID`); tamper one field → `INVALID`. *"The
+  cryptography is real, not decorative."*
+- Then run **`make live`** - one **real Razorpay Test Mode** order, pay with the
+  test card, reconcile settles exactly once, a retry refuses to double-charge.
 
-### 0:30-1:30 · Happy path, fast
-**Intent** → type *"running shoes under ₹5,000, 30-day returns, buy
-automatically."* Compile → the human-readable mandate appears. **Confirm & sign.**
-On **Transaction**, the bounded negotiation plays between the two walls and the
-verifier ticks green to `ALLOW`.
+> *"It doesn't just decide - it settles, on real Razorpay Test Mode, and it can
+> never charge twice."*
 
-### 1:30-2:00 · Trust Receipt + live verification
-**Trust Receipt → Verify signature**: `VALID`. **Tamper amount → ₹99,999**:
-`INVALID`. *"The cryptography is real."* One line: *"across the benchmark, the
-bounded upsell lifted average order value ~7.7% - every rupee through this gate."*
+**Judge thinks:** *okay, this genuinely works, end to end.*
 
-### 2:00-3:30 · Red team, by class
-Walk 3-4 cards individually: over-cap → `MANDATE_LIMIT_EXCEEDED`; price changed →
-`PRICE_MISMATCH_MERCHANT_RECORD`; catalog injection → `UNTRUSTED_INSTRUCTION`;
-frozen agent → `AGENT_FROZEN`. *"Machine-readable reason codes - measurable, not
-vibes."*
+---
 
-### 3:30-4:15 · The fuzzer
-Drop to a terminal: `make fuzz`. *"I didn't only try attacks I designed - a
-property-based fuzzer threw tens of thousands of random states at the spend-cap
-invariant."* Read the real number: **0 violations**. *"Zero is great; if it found
-one, I'd keep it and explain it. The number is never written before the run."*
+## Act 3 - Try to break it (the climax)  ·  2:45-4:30
 
-### 4:15-5:00 · Honest metrics + one real payment
-**Benchmark** screen: 100% block, 0% false-block, 100% held-out, 0 fuzzer
-violations, risk classifier reported **separately**. If time allows, run
-`make live` for one real Test Mode payment. Close: *"Autonomous commerce becomes
-trustworthy when we can measure where it fails. That's BAZAAR."*
+The turn. *"Now let's attack it."* Fire the adversarial suite: in the console
+click each attack, or run `make benchmark` and let the red-team suite run:
+
+| Attempt | Result |
+|---|---|
+| Spend ₹7,000 against a ₹5,000 cap | ✕ BLOCK `MANDATE_LIMIT_EXCEEDED` |
+| Self-issue a mandate with a doubled cap | ✕ BLOCK `MANDATE_IMMUTABLE` |
+| Tamper the price after signing | ✕ BLOCK `PRICE_MISMATCH_MERCHANT_RECORD` |
+| Replay a used nonce / resubmit a paid txn | ✕ BLOCK `NONCE_REPLAY` / `DUPLICATE_TRANSACTION` |
+| Buy off-mandate · inject via catalog text · transact while frozen · expired mandate | ✕ BLOCK - each with its own code |
+| AP2: expired / signature-flipped / unregistered-signer cart | ✕ BLOCK at AP2 verification, before the gate |
+
+Then the scoreboard, computed live:
+
+```
+Adversarial attempts blocked : 100%   (correct reason code every time)
+False-blocks on legit        : 0%
+Fuzzer spend-cap violations  : 0   over 20,000 random states
+Escapes                      : 0
+```
+
+> *"Every attack is refused, and told exactly which rule fired. The agent cannot
+> escalate its own authority - that's a property of the verifier, not a promise
+> of the AI."*
+
+**This is the climax.** Nine attack classes, an AP2 tamper set, and a
+property-fuzzer - all blocked, zero escapes.
+
+---
+
+## Close  ·  4:30-5:00
+
+Be brutally honest about the ML - it makes you *more* credible:
+
+> *"On our synthetic held-out set - 360 attacks, 900 legit - the classes are
+> separable by construction, so a clean 1.00 is expected; I don't claim it as
+> real-world fraud accuracy. So we report calibration, a noise-robustness curve,
+> and a leave-one-class-out limit instead. The model is advisory and can only
+> tighten a decision - the deterministic verifier, not the model, is the
+> guarantee."*
+
+End on the thesis:
+
+> *"Don't trust the agent. Test the authorization boundary. That's BAZAAR."*
 
 ---
 
 **Fallback:** everything except the live Razorpay payment runs offline
-(`make showcase`). Record one successful `make live` payment as a short backup
-clip so the settlement moment is safe even if the network wobbles live.
+(`make showcase`, `make ap2`, `make benchmark`). Record one successful `make live`
+clip in advance so the settlement moment is safe even if the network wobbles.

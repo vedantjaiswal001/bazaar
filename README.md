@@ -2,11 +2,13 @@
 
 <img src="docs/hero.svg" alt="BAZAAR - a deterministic authorization gate for AI-to-AI commerce" width="900">
 
-<p><strong>AI agents can already spend money. BAZAAR decides whether they should be <em>allowed</em> to - on every transaction.</strong></p>
+<p><strong>AI agents can already spend money. BAZAAR decides whether they should be <em>allowed</em> to, on every transaction.</strong></p>
+
+<p><em>Don't trust the agent. Test the authorization boundary.</em></p>
 
 <p>
-<a href="https://razorpay.com/buildathon/"><img src="https://img.shields.io/badge/Razorpay%20Buildathon%202026-Track%2001-ff5a49?style=flat-square" alt="Razorpay Buildathon 2026 Track 01"></a>
-<a href="tests/"><img src="https://img.shields.io/badge/tests-77%20passing-2ea44f?style=flat-square" alt="77 tests passing"></a>
+<a href="https://razorpay.com/"><img src="https://img.shields.io/badge/Razorpay%20AI%20Buildathon%202026-Track%2001-ff5a49?style=flat-square" alt="Razorpay AI Buildathon 2026 Track 01"></a>
+<a href="tests/"><img src="https://img.shields.io/badge/tests-93%20passing-2ea44f?style=flat-square" alt="93 tests passing"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/adversarial%20block-100%25-2ea44f?style=flat-square" alt="adversarial block 100%"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/false--block-0%25-2ea44f?style=flat-square" alt="false-block 0%"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/fuzzer%20escapes-0-2ea44f?style=flat-square" alt="fuzzer escapes 0"></a>
@@ -19,20 +21,52 @@
 <a href="docs/THREAT_MODEL.md">Threat model</a> &nbsp;·&nbsp;
 <a href="docs/ARCHITECTURE.md">Architecture</a> &nbsp;·&nbsp;
 <a href="docs/EVAL.md">Evaluation</a> &nbsp;·&nbsp;
-<a href="docs/SUBMISSION.md">Submission one-pager</a>
+<a href="docs/SUBMISSION.md">Submission one-pager</a> &nbsp;·&nbsp;
+<a href="docs/AUDIT.md">Self-audit</a>
 </p>
 
 </div>
 
 ---
 
+## At a glance
+
+|  |  |
+|---|---|
+| **What it is** | A deterministic authorization gate that sits between an AI agent and real money. |
+| **The guarantee** | No execution path can settle above the human-signed cap, and nothing probabilistic can widen authority. |
+| **The proof** | 93 tests, **100%** adversarial block, **0%** false-block, **0** fuzzer escapes over 20,000 random states. |
+| **A real rail** | Verifies a genuine Google **AP2** ES256 Cart Mandate from an AI buyer, then settles it on Razorpay **Test Mode**. |
+| **The honesty** | Every number reproduces from one command. The unflattering ones are shown next to the flattering ones. |
+
 ## The one idea
 
-Give an autonomous agent a payment rail and the danger is not that it *can't* buy - it is that it can buy the **wrong thing, at the wrong price, twice, or after being told to.** BAZAAR puts a deterministic gate between the agent and the money:
+**Don't trust the agent. Test the authorization boundary.** BAZAAR lets AI agents transact autonomously while ensuring that no agent, however intelligent, wrong, or malicious, can exceed **cryptographically and deterministically bounded** authority.
+
+Give an autonomous agent a payment rail and the danger is not that it *can't* buy. It is that it can buy the **wrong thing, at the wrong price, twice, or after being told to.** BAZAAR puts a deterministic gate between the agent and the money:
 
 > **No execution path may settle an amount greater than the signed mandate cap, and nothing probabilistic may widen authority.**
 
-LLMs **propose**. Policies **constrain**. A deterministic verifier **authorizes**. Razorpay **executes**. Receipts **prove**. A red team **attacks it on every run**. The agent literally cannot escalate its own authority - and every refusal comes back as a specific, machine-readable reason code, never "the AI decided no."
+LLMs **propose**. Policies **constrain**. A deterministic verifier **authorizes**. Razorpay **executes**. Receipts **prove**. A red team **attacks it on every run**. The agent literally cannot escalate its own authority, and every refusal comes back as a specific, machine-readable reason code, never "the AI decided no."
+
+## How it works, end to end
+
+```mermaid
+flowchart TD
+    A["AI buyer agent<br/>proposes · negotiates · acts"] --> B{"Which rail?"}
+    B -->|AP2| C["Verify real ES256 Cart Mandate<br/>registered signer · unexpired · self-consistent"]
+    B -->|Direct| D["Human-signed Ed25519 mandate<br/>the agent holds no signing key"]
+    C --> E["Merchant-signed price attestation<br/>two-sided price integrity"]
+    D --> E
+    E --> F["DETERMINISTIC VERIFIER - 11 fixed checks<br/>issuer-pinned signature · agent match · not expired · not frozen<br/>merchant-sourced price · record exists · price = record<br/>category in mandate · amount within signed cap · nonce fresh · idempotent"]
+    R["Advisory risk brain<br/>calibrated · tighten-only · cannot widen authority"] -.->|may hold for review| F
+    F -->|ALLOW| G["Razorpay Test Mode settlement<br/>idempotent · ambiguous = NOT PAID"]
+    F -->|"BLOCK + reason code"| X["Refused with a machine-readable reason"]
+    G --> H["Tamper-evident Trust Receipt<br/>+ hash-chained audit log"]
+    Z["Red team - 9 attack classes + property fuzzer"] -.->|attacks it every run| F
+```
+
+Understand it in ten seconds: **intelligence proposes; a fixed, cryptographic verifier, not the model, decides.**
 
 ## See it run
 
@@ -40,7 +74,7 @@ LLMs **propose**. Policies **constrain**. A deterministic verifier **authorizes*
 <img src="docs/demo.svg" alt="Recording of make showcase: a legitimate purchase clears the 11-check gate, a tampered receipt fails verification, nine attacks are each blocked with a reason code, the audit chain detects tampering, and the honest scoreboard prints" width="840">
 </div>
 
-<div align="center"><sub>A real recording of <code>make showcase</code> - one command runs the whole story: a purchase clears the gate, a tampered receipt fails, nine attacks are blocked, and the scoreboard is computed live.</sub></div>
+<div align="center"><sub>A real recording of <code>make showcase</code>: one command runs the whole story, a purchase clears the gate, a tampered receipt fails, nine attacks are blocked, and the scoreboard is computed live.</sub></div>
 
 ## How the gate decides
 
@@ -48,22 +82,26 @@ LLMs **propose**. Policies **constrain**. A deterministic verifier **authorizes*
 <img src="docs/gate.svg" alt="The gate is a fixed 11-check checklist; all pass gives ALLOW, the first failing check names the BLOCK reason code" width="900">
 </div>
 
-The gate is a **fixed checklist**, not a model. It is evaluated top to bottom; if everything passes, the payment is allowed and a signed Trust Receipt is issued. If anything fails, the first failing check emits its reason code and nothing settles. A probabilistic risk model runs alongside, but it can only ever *tighten* an ALLOW to a human-review hold - it can never authorize money or raise a limit.
+The gate is a **fixed checklist**, not a model. It is evaluated top to bottom; if everything passes, the payment is allowed and a signed Trust Receipt is issued. If anything fails, the first failing check emits its reason code and nothing settles. A probabilistic risk model runs alongside, but it can only ever *tighten* an ALLOW to a human-review hold. It can never authorize money or raise a limit.
+
+> **The model is not the security boundary. The verifier is.** Under a different data distribution the advisory model's recall drops to 0.63, while the deterministic gate still blocks 100%. Intelligence *proposes*; the verifier *decides*.
 
 ## The numbers that matter
 
-Every figure here is printed by `make benchmark` - reproduce them yourself. Block rates are deterministic (the gate is a fixed checklist); the fuzzer seed varies per run but the violation count is always 0. This repo never ships a fabricated number: a value not yet produced by a real run reads `UNVERIFIED`.
+Every figure here is printed by `make benchmark`, so you can reproduce them yourself. Block rates are deterministic (the gate is a fixed checklist); the fuzzer seed varies per run but the violation count is always 0. This repo never ships a fabricated number: a value not yet produced by a real run reads `UNVERIFIED`.
 
 | Number | Value |
 |---|---|
-| Adversarial block rate (144 attacks, 9 classes) | **100%** - every class, correct reason code |
+| Adversarial block rate (144 attacks, 9 classes) | **100%**, every class, correct reason code |
 | False-block rate on legitimate traffic (400, incl. boundary cases) | **0%** |
-| Held-out result (72 fresh, unseen attacks) | **100%** block, 0% false-block |
+| Gate held-out result (72 fresh, unseen attacks) | **100%** block, 0% false-block |
 | Fuzzer: spend-cap violations over 20,000 random states | **0** |
 
-Economic axis (same harness, no new engine): the seller's **bounded** upsell lifted average order value by **~7.7%**, with **100%** of upsold orders still clearing the same gate - a safe gate that does not kill revenue. The advisory risk model is reported separately (precision **1.00**, recall **0.22**, F1 0.36): the low recall is by design, because the deterministic gate does the blocking and the risk model is tuned to never false-flag legitimate traffic. See [`docs/EVAL.md`](docs/EVAL.md).
+Economic axis (same harness, no new engine): the seller's **bounded** upsell lifted average order value by **~7.7%**, with **100%** of upsold orders still clearing the same gate, a safe gate that does not kill revenue.
 
-**Live settlement is proven, not simulated.** `make live` runs one real Razorpay Test Mode order end to end - a captured payment and a reconcile that settles exactly once, with a repeated attempt refusing to double-charge. It is the one result you reproduce with your own `rzp_test_` keys rather than from the repo alone (the in-repo tests exercise the same flow against a faithful fake).
+The advisory risk model is a **calibrated** classifier (precision **1.00**, recall **1.00**, Brier **0.038**) on a risk-model held-out set of **360 attacks + 900 legit** with fresh keys. Because these synthetic classes are separable by construction, a clean 1.00 is *expected, not magic*, so the eval leads with the **harder** signals: calibration, a **noise-robustness curve** (recall falls to ~0.82 under noise), a **leave-one-class-out** probe (mean 11%), and an **out-of-distribution** test (Generator B) where the advisory model's recall honestly **drops to 0.63 while the deterministic gate still blocks 100%**. The model is advisory: it can only *tighten* to a review hold, never widen authority. Full methodology, counts and curves in [`docs/eval/RISK_BRAIN.md`](docs/eval/RISK_BRAIN.md).
+
+**Live settlement is proven, not simulated.** `make live` runs one real Razorpay Test Mode order end to end, a captured payment and a reconcile that settles exactly once, with a repeated attempt refusing to double-charge. It is the one result you reproduce with your own `rzp_test_` keys rather than from the repo alone (the in-repo tests exercise the same flow against a faithful fake).
 
 ## Nine attacks, nine reason codes
 
@@ -83,6 +121,16 @@ A compromised buyer or seller agent tries every way to cheat. Each is blocked wi
 
 Full mapping of attack to defense in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 
+## Sellable to a real AI buyer: the AP2 rail
+
+BAZAAR doesn't only defend its own mandates; it accepts a real, agent-standard payment authorization. A buyer's credential provider signs an **ES256 Cart Mandate** (Google's Agent Payments Protocol); BAZAAR verifies its authenticity, registered signer, unexpired, self-consistent, then settles it through the **same untouched 11-check gate**. Authenticity is AP2's job; money is the gate's.
+
+`python scripts/ap2_demo.py` (or `make ap2`): **1/1** legit carts clear, **5/5** tampers caught, a price tamper and an over-budget cart at the money gate; an expired, signature-tampered, or unregistered-signer cart at AP2 verification, *before* the gate. 12 tests in `tests/integration/test_ap2.py`. Full write-up in [`docs/AP2_RAIL.md`](docs/AP2_RAIL.md).
+
+## Two-sided price integrity: merchant-as-signer
+
+The merchant signs the price it will honour (Ed25519). The gate then authorises against that **merchant-signed** price, so a purchase is a two-sided handshake: the buyer signs what they authorise, the merchant signs what it will charge, and both must agree. Tamper either side and a signature check fails, not just a value comparison. See [`backend/bazaar/catalog/attestation.py`](backend/bazaar/catalog/attestation.py).
+
 ## Try it in 60 seconds
 
 ```bash
@@ -94,14 +142,16 @@ make showcase    # the whole story in one command: ALLOW, tamper-fail,
 Everything else:
 
 ```bash
-make test        # 77 tests: unit + property + security + integration
+make test        # 93 tests: unit + property + security + integration
 make fuzz        # property-based fuzzer against the spend-cap invariant
 make benchmark   # regenerate datasets, run the gate + fuzzer, print the scoreboard
+make train       # train + evaluate the calibrated risk brain (writes the artifact + plots)
+make ap2         # AP2 rail conformance: real ES256 Cart Mandates (1/1 legit, 5/5 tampers)
 make verify      # receipt verify/tamper + audit-chain verify/tamper
 make run         # FastAPI backend on :8000   (make web for the UI on :5173)
 ```
 
-**One real Razorpay Test Mode payment**, end to end, no webhook tunnel - copy `.env.example` to `.env`, add your `rzp_test_` keys, then:
+**One real Razorpay Test Mode payment**, end to end, no webhook tunnel. Copy `.env.example` to `.env`, add your `rzp_test_` keys, then:
 
 ```bash
 make live        # gate ALLOWs -> real order on Razorpay -> pay with a test
@@ -109,25 +159,18 @@ make live        # gate ALLOWs -> real order on Razorpay -> pay with a test
 make live-fake   # the same flow with no network and no keys (a dry run)
 ```
 
-No real money ever moves - the client refuses any key that is not `rzp_test_`.
+No real money ever moves: the client refuses any key that is not `rzp_test_`.
 
-## The demo, on real screens
+## The console, on real screens
 
-Six screens (React + TypeScript + Vite), each driving the real backend - nothing mocked.
+A single **Razorpay-brand** console (React + TypeScript + Vite) drives the real backend, nothing mocked. Pick an AI buyer, a real AP2 signed cart or a red-team attack, and watch the pipeline advance: the AP2 verification and the 11-check gate resolve in real time, a hash-chained audit log streams, and a signed Trust Receipt issues. A **Results** tab reads the live `make benchmark` scoreboard.
 
-**Bounded negotiation into deterministic settlement** (the agreed price sits between the seller's floor and the buyer's cap):
+```bash
+make run     # FastAPI backend on :8000   (terminal 1)
+make web     # the console on :5173       (terminal 2)  ->  open http://localhost:5173
+```
 
-![Transaction screen](docs/screens/03_transaction.png)
-
-**Red-team harness** - fire all nine attack classes live; each returns its specific reason code:
-
-![Red team screen](docs/screens/07_redteam.png)
-
-**Benchmark scoreboard** - the numbers above, produced by `make benchmark`, with the advisory risk model reported separately:
-
-![Benchmark screen](docs/screens/08_benchmark.png)
-
-## What BAZAAR builds - six components
+## What BAZAAR builds: eight components
 
 1. **Intent Compiler and Signed Mandate** - natural-language request to structured mandate; the human confirms the rendered mandate, then it is Ed25519-signed and locked with a generous but bounded TTL. The agent never holds the signing key.
 2. **Deterministic Authorization Gate** - the heart: a fixed 11-check checklist (signature by a trusted issuer, mandate binds the agent, not expired, agent not frozen, money-field is merchant-sourced, record exists, price == merchant of record, category in allowlist, amount within the cap, nonce unused, not already executed) to ALLOW or one reason code.
@@ -135,6 +178,8 @@ Six screens (React + TypeScript + Vite), each driving the real backend - nothing
 4. **Razorpay Test-Mode Settlement** - real Orders + Payments with idempotency and verified webhooks; the ambiguous window defaults to "not paid," reconciles from Razorpay, and never re-charges.
 5. **Trust Receipt + Hash-Chained Audit Log** - every authorization emits a signed receipt; each log entry chains the previous entry's hash, making the whole log tamper-evident without a blockchain.
 6. **Red-Team Harness + Benchmark** - an adversarial agent attacks the live gate across nine classes; a property-based fuzzer attacks the core invariant; the benchmark measures block rates, false-block rate, and honest escapes.
+7. **AP2 Rail Adapter** - verifies a real ES256 Cart Mandate (Google's Agent Payments Protocol) and maps it into the canonical Mandate + transaction, so a genuine AI buyer can transact through the same untouched gate (`backend/bazaar/adapters/ap2.py`).
+8. **Calibrated Risk Brain + Merchant-as-Signer** - a calibrated advisory classifier (recall 1.00 at zero false positives, interpretable weights) and Ed25519 merchant price attestations that make price integrity a two-sided, tamper-evident handshake.
 
 ## The boundary that must not blur
 
@@ -142,23 +187,36 @@ The deterministic `verifier/` imports **nothing** from the LLM or agent layer. T
 
 ```
 bazaar/
-├── backend/     intent/ policy/ verifier/ risk/ razorpay/ receipt/ ledger/ redteam/ agents/ catalog/
-├── frontend/    six demo screens (React + TS + Vite)
+├── backend/     intent/ policy/ verifier/ risk/ adapters/ razorpay/ receipt/ ledger/ redteam/ agents/ catalog/
+├── frontend/    live Razorpay-brand console (React + TS + Vite)
 ├── tests/       unit/ integration/ property/ security/
 ├── benchmarks/  one-command runner -> scoreboard
-├── docs/        THREAT_MODEL · ARCHITECTURE · EVAL · SUBMISSION · DEMO_SCRIPT
-├── scripts/     demo · showcase · live_razorpay · verify_chain
-└── Makefile     setup · test · fuzz · benchmark · showcase · live · run
+├── docs/        THREAT_MODEL · ARCHITECTURE · EVAL · SUBMISSION · AP2_RAIL · AUDIT · eval/RISK_BRAIN
+├── scripts/     demo · showcase · live_razorpay · verify_chain · train_risk · ap2_demo
+└── Makefile     setup · test · fuzz · benchmark · train · ap2 · showcase · verify · live · run
 ```
 
 ## Honesty rules this repo holds itself to
 
 - **No fabricated results, ever.** Numbers come from commands that actually ran. Anything not yet run reads `UNVERIFIED`.
 - **Reason codes, not vibes.** Every block returns a machine-readable code, and every metric is reproducible from a seed.
-- **The unflattering number gets reported too.** The risk model's recall is shown next to its precision, not hidden.
+- **The unflattering number gets reported too.** The risk model's recall is shown next to its precision, and its out-of-distribution recall (0.63) is shown next to its clean-set recall (1.00).
 - **Secrets never in git.** `.env` is git-ignored; `.env.example` shows the shape.
 - **Never hand-rolled crypto.** Ed25519 via libsodium (PyNaCl); canonical JSON via `rfc8785`.
 
+## Known limitations (stated, not hidden)
+
+A strong submission names what it does *not* solve. BAZAAR deliberately does not claim these:
+
+- **No real-world fraud accuracy is claimed.** The risk model is evaluated on *synthetic* data whose classes are separable by construction, so the perfect clean-set score is *expected*. The eval reports calibration, a noise-robustness curve, and a leave-one-class-out limit instead of presenting 1.00/1.00 as production fraud performance. The **deterministic gate**, not the model, is the security guarantee.
+- **The risk model does not transfer to novelty.** Held-out mandates use fresh keys, and a second generator (Generator B) tests distribution shift: recall drops to 0.63 there, and a leave-one-class-out probe drops to an 11% mean. The gate blocks 100% in every one of those cases, which is the point.
+- **One real rail is implemented: AP2.** x402 and NPCI's UAP interoperability are future work, not in this submission. The AP2 bridge verifies ES256-signed, single-line Cart Mandates; full SD-JWT selective disclosure and multi-item carts are future.
+- **No hierarchical delegation.** Authority is bounded by issuer-key pinning (an agent cannot self-issue a bigger mandate) and the signed cap, not by parent/child delegation limits (UPI-Circle-style), which are out of scope.
+- **The live Razorpay payment needs your keys.** `make live` performs one real Test Mode order and an interactive test-card payment; it needs your own `rzp_test_` keys and is not part of the keyless test suite. Everything else reproduces from the repo alone.
+- **No real money, marketplace, reputation graph, or blockchain.** Settlement is Razorpay **Test Mode** only.
+
 ## License
 
-MIT - see [`LICENSE`](LICENSE).
+MIT, see [`LICENSE`](LICENSE).
+
+Built by **Vedant Jaiswal** for the Razorpay AI Buildathon 2026.

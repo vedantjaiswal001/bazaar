@@ -18,6 +18,11 @@ dependencies = [
     "python-dotenv>=1.0",
     "httpx>=0.27",
     "razorpay>=1.4",        # official Razorpay Python SDK (Phase 2)
+    "scikit-learn>=1.7,<2.0",  # advisory risk brain (calibrated logistic model)
+    "numpy>=1.26",          # feature vectors
+    "joblib>=1.3",          # load the trained risk-model artifact
+    "pyjwt>=2.8",           # AP2 rail: ES256 Cart Mandate (JWS) verification
+    "cryptography>=42",     # ES256 (P-256) keys for the AP2 credential provider
 ]
 
 [project.optional-dependencies]
@@ -26,6 +31,7 @@ dev = [
     "hypothesis>=6.98",     # property-based testing + the spend-cap fuzzer
     "ruff>=0.3",
     "mypy>=1.9",
+    "matplotlib>=3.8",      # risk-brain eval plots (calibration / cost / PR curves)
 ]
 
 [tool.setuptools.packages.find]

@@ -1,0 +1,132 @@
+{
+  "dataset": {
+    "generation": "synthetic + adversarial; 9 threat-model attack classes (labelled generators) + within-policy legit traffic across the in-cap range incl. boundary edges",
+    "splits": "independent RNG seed + a fresh Ed25519 issuer key per split; held-out mandates are signed by keys the model never saw",
+    "train": {
+      "total": 2210,
+      "attacks": 810,
+      "legit": 1400
+    },
+    "held_out": {
+      "total": 1260,
+      "attacks": 360,
+      "per_class": 40,
+      "legit": 900
+    }
+  },
+  "held_out": {
+    "tp": 360,
+    "fp": 0,
+    "fn": 0,
+    "tn": 900,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pr_auc": 1.0,
+    "roc_auc": 1.0,
+    "brier": 0.038084449380870855
+  },
+  "ood_held_out": {
+    "tp": 227,
+    "fp": 0,
+    "fn": 133,
+    "tn": 900,
+    "precision": 1.0,
+    "recall": 0.6305555555555555,
+    "f1": 0.7734241908006814,
+    "generator": "B",
+    "attacks": 360,
+    "legit": 900
+  },
+  "noise_robustness": {
+    "0.00": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "fp": 0,
+      "fn": 0
+    },
+    "0.10": {
+      "recall": 0.9777777777777777,
+      "precision": 0.9617486338797814,
+      "fp": 14,
+      "fn": 8
+    },
+    "0.25": {
+      "recall": 0.9194444444444444,
+      "precision": 0.8826666666666667,
+      "fp": 44,
+      "fn": 29
+    },
+    "0.50": {
+      "recall": 0.8527777777777777,
+      "precision": 0.713953488372093,
+      "fp": 123,
+      "fn": 53
+    },
+    "1.00": {
+      "recall": 0.8194444444444444,
+      "precision": 0.5739299610894941,
+      "fp": 219,
+      "fn": 65
+    }
+  },
+  "risk_drivers": {
+    "over_cap": 2.28,
+    "nonce_seen": 1.992,
+    "agent_frozen": 1.957,
+    "category_out": 1.956,
+    "provenance_untrusted": 1.949,
+    "idem_seen": 1.94,
+    "issuer_untrusted": 1.915,
+    "price_mismatch": 1.471,
+    "num_allowed_categories": -1.046,
+    "expired": 1.038,
+    "ttl_remaining_norm": -1.037,
+    "price_delta_ratio": 0.862,
+    "near_cap": -0.79,
+    "cap_utilization": -0.149,
+    "amount_log": 0.094,
+    "record_missing": 0.0,
+    "injection_markers": 0.0,
+    "sig_invalid": 0.0,
+    "velocity_1m": 0.0,
+    "agent_prior_blocks": 0.0
+  },
+  "per_class_recall": {
+    "budget": 1.0,
+    "policy": 1.0,
+    "price": 1.0,
+    "replay": 1.0,
+    "double_charge": 1.0,
+    "category": 1.0,
+    "injection": 1.0,
+    "state": 1.0,
+    "expiry": 1.0
+  },
+  "leave_one_class_out_recall": {
+    "budget": 0.0,
+    "policy": 0.0,
+    "price": 0.0,
+    "replay": 0.0,
+    "double_charge": 0.0,
+    "category": 0.0,
+    "injection": 0.0,
+    "state": 0.0,
+    "expiry": 0.0
+  },
+  "leave_one_class_out_mean": 0.0,
+  "thresholds": {
+    "review": 0.679,
+    "block": 0.729
+  },
+  "cost_model": {
+    "fp_cost": 1.0,
+    "fn_cost": 3.0,
+    "cost_optimal_threshold": 0.63
+  },
+  "n": {
+    "train": 2210,
+    "val": 1260,
+    "held_out": 1260
+  }
+}

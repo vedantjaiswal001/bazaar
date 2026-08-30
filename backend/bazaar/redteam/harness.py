@@ -20,6 +20,7 @@ from bazaar.crypto.signing import generate_keypair
 from bazaar.db.database import connect, init_db
 from bazaar.models import RiskAction
 from bazaar.redteam.attacks import ATTACK_CLASSES, Case
+from bazaar.risk.features import RiskContext
 from bazaar.risk.model import assess
 from bazaar.verifier.gate import authorize
 from bazaar.verifier.reasons import Decision
@@ -48,7 +49,17 @@ def evaluate_cases(cases: list[Case]) -> list[CaseResult]:
             passed = gr.decision == Decision.BLOCK.value and gr.reason == c.expected_reason
         else:
             passed = gr.decision == Decision.ALLOW.value
-        risk = assess(c.txn, c.offer)
+        # The advisory model sees the same live context the gate does, so it can
+        # reason about replay / duplicate / frozen / forged-issuer signals too.
+        issuer_trusted = (
+            c.trusted_issuer_keys is None
+            or c.txn.mandate.public_key in c.trusted_issuer_keys
+        )
+        ctx = RiskContext(
+            nonce_seen=c.nonce_seen, idem_seen=c.idem_seen,
+            agent_frozen=c.agent_frozen, issuer_trusted=issuer_trusted,
+        )
+        risk = assess(c.txn, c.offer, ctx)
         results.append(CaseResult(
             id=c.id, kind=c.kind, attack_class=c.attack_class,
             expected_decision=c.expected_decision, expected_reason=c.expected_reason,

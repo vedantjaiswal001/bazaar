@@ -1,0 +1,7 @@
+# Raw screen recordings are large and may contain sensitive frames - host the
+# video with your submission instead of committing it. Commit only REDACTED
+# artefacts (live_payment_result.json, a redacted live_payment.png).
+*.mp4
+*.mov
+*.webm
+*_raw.*

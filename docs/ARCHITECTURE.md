@@ -51,5 +51,5 @@ if the deterministic core ever imports the probabilistic layer.
 - **Crypto:** PyNaCl (Ed25519 / libsodium) + `rfc8785` (JCS). Never hand-rolled.
 - **Data:** SQLite (Postgres-compatible schema). Replay + double-charge defenses
   live in UNIQUE constraints, not application code.
-- **Frontend:** React + TypeScript + Vite. Six screens, functional not flashy.
+- **Frontend:** React + TypeScript + Vite. A single two-tab console (Console + Results), functional not flashy.
 - **Testing:** pytest + Hypothesis (property-based fuzzing of the core invariant).

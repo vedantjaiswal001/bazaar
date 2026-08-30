@@ -1,7 +1,7 @@
 # BAZAAR - Frontend
 
-Six demo screens (React + TypeScript + Vite) over the BAZAAR API. Functional and
-clean, not flashy - every screen drives the real backend, nothing is mocked.
+A single Razorpay-brand console (React + TypeScript + Vite) over the BAZAAR API.
+Functional and clean, not flashy. It drives the real backend, nothing is mocked.
 
 ## Run
 
@@ -17,11 +17,14 @@ make web              # Vite dev server on http://localhost:5173
 The dev server proxies `/api` to the backend on `:8000`. For a production build,
 set `VITE_API_BASE` to the backend origin and run `make web-build`.
 
-## Screens
+## Two tabs
 
-1. **Intent** - natural language → a confirmable mandate (human confirms before signing).
-2. **Transaction** - bounded negotiation inside the two walls (cap + floor) → gate decision.
-3. **Verifier** - the fixed checklist, pass/fail per check, with the reason code.
-4. **Trust Receipt** - verify a signed receipt; tamper one field and watch it fail.
-5. **Red Team** - fire any of the nine attack classes live; each returns its reason code.
-6. **Benchmark** - the scoreboard from `make benchmark` (four numbers + per class + revenue).
+1. **Console** - pick an AI buyer and watch one transaction resolve end to end.
+   Choose a real AP2 signed cart or a red-team attack; the pipeline advances live:
+   AP2 authenticity check, then the deterministic 11-check gate resolving pass or
+   fail per check with its reason code, a hash-chained audit log streaming, and a
+   signed Trust Receipt issuing on ALLOW.
+2. **Results** - the live scoreboard read straight from the backend: the advisory
+   risk brain (calibrated, tighten-only) with its readable top risk-driver weights,
+   the AP2 rail conformance table (1/1 legit, 5/5 tampers), and the bounded-upsell
+   revenue line. Every figure is computed by the backend, not hard-coded here.

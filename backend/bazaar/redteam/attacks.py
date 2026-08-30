@@ -173,3 +173,98 @@ def generate_legitimate(rng: random.Random, sk: str, pk: str, n: int = 400) -> l
     trusted = frozenset({pk})
     return [dataclasses.replace(_make_legit(rng, sk, pk), trusted_issuer_keys=trusted)
             for _ in range(n)]
+
+
+# ---------------------------------------------------------------------------
+# GENERATOR B - a genuinely DIFFERENT data-generating process, for an
+# out-of-distribution (OOD) held-out evaluation. Same threat model and the same
+# gate verdicts, but different attack templates and parameter distributions:
+# near-boundary over-cap, tiny post-auth price deltas, off-mandate categories
+# drawn from a different set under multi-category allowlists, expired mandates
+# with random offsets, and benign edge cases with unusual (but valid) caps,
+# amounts and larger allowlists. Used to test whether the risk model transfers
+# to a distribution it was not trained on. See scripts/train_risk.py.
+# ---------------------------------------------------------------------------
+def _make_attack_ood(cls: str, rng: random.Random, sk: str, pk: str) -> Case:
+    reason = ATTACK_CLASS_TO_REASON[cls].value
+    cid = f"ood-{cls}-{uuid.uuid4().hex[:6]}"
+    cap = rng.choice([300_000, 480_000, 750_000])
+    cats = tuple(sorted({*rng.sample(_CATEGORIES, rng.randint(1, 3)), "footwear"}))
+    m = _mandate(sk, pk, cap=cap, cats=cats)
+
+    if cls == "budget":                                   # NEAR-boundary over-cap
+        price = rng.randint(cap + 1, cap + 40_000)
+        offer = _record(category="footwear", price=price)
+        txn = _txn(m, offer)
+    elif cls == "policy":                                 # smaller forged inflation
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        atk_sk, atk_pk = generate_keypair()
+        forged = _mandate(atk_sk, atk_pk, cap=cap + rng.randint(1, 150_000), cats=cats)
+        txn = _txn(forged, offer)
+    elif cls == "price":                                  # TINY post-auth delta
+        p = rng.randint(50_000, cap)
+        offer = _record(category="footwear", price=p)
+        txn = _txn(m, offer, amount=p + rng.choice([-2500, -900, -300, 300, 900, 2500]))
+    elif cls == "replay":
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        txn = _txn(m, offer)
+        return Case(cid, "attack", cls, txn, offer, Decision.BLOCK.value, reason, nonce_seen=True)
+    elif cls == "double_charge":
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        txn = _txn(m, offer)
+        return Case(cid, "attack", cls, txn, offer, Decision.BLOCK.value, reason, idem_seen=True)
+    elif cls == "category":                               # a DIFFERENT off-mandate category
+        offcat = rng.choice([c for c in _CATEGORIES if c not in cats])
+        offer = _record(sku="SKU-OOD", category=offcat, price=rng.randint(50_000, cap))
+        txn = _txn(m, offer)
+    elif cls == "injection":
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        txn = _txn(m, offer, price_source=rng.choice(
+            [PriceSource.DESCRIPTION, PriceSource.SELLER_CLAIM, PriceSource.AGENT_INVENTED]))
+    elif cls == "state":
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        txn = _txn(m, offer)
+        return Case(cid, "attack", cls, txn, offer, Decision.BLOCK.value, reason, agent_frozen=True)
+    elif cls == "expiry":
+        m_exp = _mandate(sk, pk, cap=cap, cats=cats,
+                         ttl=rng.randint(5, 60), issued_offset=-rng.randint(500, 3000))
+        offer = _record(category="footwear", price=rng.randint(50_000, cap))
+        txn = _txn(m_exp, offer)
+    else:  # pragma: no cover
+        raise ValueError(cls)
+
+    return Case(cid, "attack", cls, txn, offer, Decision.BLOCK.value, reason)
+
+
+def _make_legit_ood(rng: random.Random, sk: str, pk: str) -> Case:
+    """Within-policy transactions from a different benign distribution."""
+    cap = rng.choice([250_000, 450_000, 850_000, 1_200_000, 2_000_000])
+    cats = tuple(sorted(set(rng.sample(_CATEGORIES, rng.randint(2, 5)))))
+    category = rng.choice(cats)
+    m = _mandate(sk, pk, cap=cap, cats=cats)
+    amount = min(cap, rng.choice([
+        rng.randint(500, 20_000),                    # unusually small orders
+        rng.randint(1, cap),
+        cap, cap - 1, cap - 2_500,                   # boundary edges (must still pass)
+        rng.randint(max(1, cap - 5_000), cap),
+    ]))
+    offer = _record(sku=f"SKU-{category[:4].upper()}", category=category, price=amount)
+    txn = _txn(m, offer)
+    return Case(f"oodleg-{uuid.uuid4().hex[:6]}", "legit", None, txn, offer,
+                Decision.ALLOW.value, Reason.OK.value)
+
+
+def generate_adversarial_ood(rng: random.Random, sk: str, pk: str, per_class: int = 16) -> list[Case]:
+    trusted = frozenset({pk})
+    cases: list[Case] = []
+    for cls in ATTACK_CLASSES:
+        for _ in range(per_class):
+            c = _make_attack_ood(cls, rng, sk, pk)
+            cases.append(dataclasses.replace(c, trusted_issuer_keys=trusted))
+    return cases
+
+
+def generate_legitimate_ood(rng: random.Random, sk: str, pk: str, n: int = 400) -> list[Case]:
+    trusted = frozenset({pk})
+    return [dataclasses.replace(_make_legit_ood(rng, sk, pk), trusted_issuer_keys=trusted)
+            for _ in range(n)]

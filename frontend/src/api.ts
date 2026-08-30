@@ -94,6 +94,53 @@ export interface CatalogItem {
   description: string;
 }
 
+export interface AP2Cart {
+  payee: string;
+  sku: string;
+  title: string;
+  amount: number;
+  amount_display: string;
+  currency: string;
+  budget: number;
+  budget_display: string;
+  issuer_kid: string;
+  expires_at: string;
+}
+
+export interface PriceIntegrity {
+  buyer_signed: boolean;
+  merchant_signed: boolean;
+  attestation_id?: string;
+  attested_price?: number;
+  attested_price_display?: string;
+  reason?: string;
+}
+
+export interface AP2Result {
+  rail: string;
+  verified: boolean;
+  stage?: string;
+  decision: string;
+  reason: string;
+  detail?: string;
+  variant?: string;
+  cart?: AP2Cart;
+  txn_id?: string;
+  risk_score?: number;
+  effective_decision?: string;
+  checks?: Check[];
+  price_integrity?: PriceIntegrity;
+  dual_signed?: boolean;
+  receipt?: Receipt;
+}
+
+export interface AP2Info {
+  rail: string;
+  alg: string;
+  trusted_credential_providers: string[];
+  demo_variants: string[];
+}
+
 export const api = {
   health: () => get<{ status: string; razorpay_settlement: string }>("/api/health"),
   catalog: () => get<{ items: CatalogItem[] }>("/api/catalog"),
@@ -101,6 +148,8 @@ export const api = {
   purchase: (intent_text: string, upsell: boolean) =>
     post<PurchaseResult>("/api/purchase", { intent_text, upsell }),
   attack: (attack_class: string) => post<AttackResult>("/api/attack", { attack_class }),
+  ap2Info: () => get<AP2Info>("/api/ap2/info"),
+  ap2Demo: (variant: string) => post<AP2Result>("/api/ap2/demo", { variant }),
   verifyReceipt: (receipt: Receipt) =>
     post<{ valid: boolean }>("/api/receipt/verify", { receipt }),
   audit: () => get<{ length: number; ok: boolean; detail: string }>("/api/audit"),

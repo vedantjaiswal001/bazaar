@@ -23,6 +23,7 @@ from bazaar.db import repository as repo
 from bazaar.ledger.audit_log import append_event
 from bazaar.models import GateResult, MerchantRecord, RiskSignal, TransactionRequest
 from bazaar.receipt.trust_receipt import TrustReceipt, build_receipt
+from bazaar.risk.features import RiskContext
 from bazaar.risk.model import assess
 from bazaar.verifier.gate import apply_risk, authorize
 from bazaar.verifier.reasons import Decision, Reason
@@ -61,7 +62,14 @@ class AuthorizationService:
 
         result = authorize(txn, offer, nonce_seen=nseen, idempotency_seen=iseen,
                            agent_frozen=frozen, trusted_issuer_keys=self.trusted_issuer_keys)
-        risk = assess(txn, offer)
+        issuer_trusted = (
+            self.trusted_issuer_keys is None
+            or txn.mandate.public_key in self.trusted_issuer_keys
+        )
+        risk = assess(txn, offer, RiskContext(
+            nonce_seen=nseen, idem_seen=iseen, agent_frozen=frozen,
+            issuer_trusted=issuer_trusted,
+        ))
 
         persisted = False
         if result.decision == Decision.ALLOW.value:
