@@ -12,8 +12,8 @@
 
 SHELL := /bin/bash
 VENV  := .venv
-PY    := $(VENV)/bin/python
-PIP   := $(VENV)/bin/pip
+PY    := $(VENV)/Scripts/python.exe
+PIP   := $(VENV)/Scripts/pip.exe
 
 .DEFAULT_GOAL := help
 
@@ -22,12 +22,12 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-$(VENV)/bin/python:
+$(VENV)/Scripts/python.exe:
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip >/dev/null
 
 .PHONY: setup
-setup: $(VENV)/bin/python ## Create venv, install backend + dev deps, init the database
+setup: $(VENV)/Scripts/python.exe ## Create venv, install backend + dev deps, init the database
 	$(PIP) install -e "backend[dev]"
 	$(PY) scripts/init_db.py
 	@echo ""
@@ -99,7 +99,7 @@ verify: ## Phase 3 checkpoint: receipt verify/tamper + audit-chain verify/tamper
 
 .PHONY: lint
 lint: ## Lint the backend with ruff
-	$(VENV)/bin/ruff check backend
+	$(VENV)/Scripts/ruff.exe check backend
 
 .PHONY: clean
 clean: ## Remove venv, database, and caches
