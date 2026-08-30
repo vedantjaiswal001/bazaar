@@ -1,26 +1,17 @@
-# One-click Render blueprint: FastAPI backend (Docker) + the static console.
-# In the Render dashboard: New -> Blueprint -> point at this repo. After the API
-# is live, set the web service's VITE_API_BASE to the API's URL and redeploy it.
+# One-click Render deploy. A SINGLE Docker web service serves the BAZAAR console
+# and its API at one URL, so there is nothing to wire up afterwards. No secrets
+# are needed: the interactive demo (gate, attacks, benchmark) runs without any
+# Razorpay keys.
+#
+# In the Render dashboard:  New -> Blueprint -> point at this repo -> Apply.
+# When the build finishes, the service URL (e.g. https://bazaar.onrender.com)
+# serves the whole app.
 services:
   - type: web
-    name: bazaar-api
+    name: bazaar
     runtime: docker
     dockerfilePath: ./deploy/Dockerfile
     dockerContext: .
     plan: free
     healthCheckPath: /api/health
     autoDeploy: true
-
-  - type: web
-    name: bazaar-web
-    runtime: static
-    plan: free
-    buildCommand: cd frontend && npm ci && npm run build
-    staticPublishPath: ./frontend/dist
-    envVars:
-      - key: VITE_API_BASE
-        sync: false        # set to the bazaar-api URL (e.g. https://bazaar-api.onrender.com)
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html

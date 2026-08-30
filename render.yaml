@@ -1,0 +1,16 @@
+# One-click Render deploy (Render auto-detects this file at the repo root).
+# A SINGLE Docker web service serves the BAZAAR console and its API at one URL,
+# so there is nothing to wire up afterwards. No secrets are needed: the
+# interactive demo (gate, attacks, benchmark) runs without any Razorpay keys.
+#
+# In the Render dashboard:  New -> Blueprint -> pick this repo -> Apply.
+# When the build finishes, the service URL serves the whole app.
+services:
+  - type: web
+    name: bazaar
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true

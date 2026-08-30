@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import threading
 import time
 import uuid
@@ -24,6 +25,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from bazaar.adapters.ap2 import AP2VerificationError, to_bazaar, verify_cart_mandate
@@ -471,3 +474,29 @@ async def razorpay_webhook(request: Request) -> dict:
     with _LOCK:
         result = handle_event(state().conn, event)
     return {"action": result.action, "txn_id": result.txn_id, "detail": result.detail}
+
+
+# --------------------------------------------------------------------------- #
+# Single-URL deploy: serve the built console from THIS same service, so the
+# whole app lives at one address. Active only when BAZAAR_WEB_DIST points at a
+# built `dist/` (the Docker image sets it). In dev and tests the variable is
+# unset, so the API is unchanged and the Vite dev server serves the UI.
+# --------------------------------------------------------------------------- #
+_WEB_DIST = os.environ.get("BAZAAR_WEB_DIST", "")
+if _WEB_DIST and Path(_WEB_DIST).is_dir():
+    _dist = Path(_WEB_DIST)
+    app.mount("/assets", StaticFiles(directory=str(_dist / "assets")), name="assets")
+
+    @app.get("/")
+    def _spa_root() -> FileResponse:
+        return FileResponse(str(_dist / "index.html"))
+
+    @app.get("/{full_path:path}")
+    def _spa_fallback(full_path: str) -> FileResponse:
+        # Never shadow the API; everything else falls back to the single page.
+        if full_path.startswith("api"):
+            raise HTTPException(404, "not found")
+        candidate = _dist / full_path
+        if candidate.is_file():
+            return FileResponse(str(candidate))
+        return FileResponse(str(_dist / "index.html"))
