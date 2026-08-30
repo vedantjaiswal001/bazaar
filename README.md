@@ -17,7 +17,8 @@
 </p>
 
 <p>
-<a href="https://vedantjaiswal001.github.io/bazaar/"><strong>Live demo</strong></a> &nbsp;·&nbsp;
+<a href="https://vedantjaiswal001.github.io/bazaar/"><strong>Live demo (interactive)</strong></a> &nbsp;·&nbsp;
+<a href="https://github.com/vedantjaiswal001/bazaar">GitHub repo</a> &nbsp;·&nbsp;
 <a href="docs/THREAT_MODEL.md">Threat model</a> &nbsp;·&nbsp;
 <a href="docs/ARCHITECTURE.md">Architecture</a> &nbsp;·&nbsp;
 <a href="docs/EVAL.md">Evaluation</a> &nbsp;·&nbsp;
@@ -71,10 +72,10 @@ Understand it in ten seconds: **intelligence proposes; a fixed, cryptographic ve
 ## See it run
 
 <div align="center">
-<img src="docs/demo.svg" alt="Recording of make showcase: a legitimate purchase clears the 11-check gate, a tampered receipt fails verification, nine attacks are each blocked with a reason code, the audit chain detects tampering, and the honest scoreboard prints" width="840">
+<img src="docs/demo.gif" alt="A real screen recording of the live demo: nine attacks are fired at the gate and each is blocked in real time with its own machine-readable reason code" width="840">
 </div>
 
-<div align="center"><sub>A real recording of <code>make showcase</code>: one command runs the whole story, a purchase clears the gate, a tampered receipt fails, nine attacks are blocked, and the scoreboard is computed live.</sub></div>
+<div align="center"><sub>A real screen recording of the <a href="https://vedantjaiswal001.github.io/bazaar/">live demo</a>: nine attacks fired at the gate, each blocked in real time with its own reason code. Nothing mocked.</sub></div>
 
 ## How the gate decides
 
