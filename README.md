@@ -220,4 +220,4 @@ A strong submission names what it does *not* solve. BAZAAR deliberately does not
 
 MIT, see [`LICENSE`](LICENSE).
 
-Built by **Vedant Jaiswal** for the Razorpay AI Buildathon 2026.
+Built by **Vedant Jaiswal**
