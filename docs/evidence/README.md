@@ -32,7 +32,7 @@ pay with Razorpay's **test card `4111 1111 1111 1111`** → `reconcile` settles 
    {
      "order_id": "order_XXXXXXXXXXXXXX",
      "payment_id": "pay_XXXXXXXXXXXXXX",
-     "amount": 449900,
+     "amount": 412475,
      "currency": "INR",
      "status": "settled",
      "captured": true,

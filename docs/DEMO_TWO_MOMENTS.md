@@ -21,7 +21,7 @@ Put your Razorpay **Test Mode** keys (`rzp_test_...`) in `.env` for the payment.
 ## Moment 1 - the live payment (terminal)
 
 One command, one clean take. The terminal cannot glitch on camera, so this is the
-safest place to prove real money settles exactly once.
+safest place to prove a real Razorpay Test Mode payment settles exactly once.
 
 ```bash
 make live

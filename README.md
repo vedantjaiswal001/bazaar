@@ -7,13 +7,13 @@
 <p><em>Don't trust the agent. Test the authorization boundary.</em></p>
 
 <p>
-<a href="https://razorpay.com/"><img src="https://img.shields.io/badge/Razorpay%20AI%20Buildathon%202026-Track%2001-ff5a49?style=flat-square" alt="Razorpay AI Buildathon 2026 Track 01"></a>
+<a href="https://razorpay.com/"><img src="https://img.shields.io/badge/Razorpay%20AI%20Buildathon%202026-Track%2001-0B74C4?style=flat-square" alt="Razorpay AI Buildathon 2026 Track 01"></a>
 <a href="tests/"><img src="https://img.shields.io/badge/tests-93%20passing-2ea44f?style=flat-square" alt="93 tests passing"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/adversarial%20block-100%25-2ea44f?style=flat-square" alt="adversarial block 100%"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/false--block-0%25-2ea44f?style=flat-square" alt="false-block 0%"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/fuzzer%20escapes-0-2ea44f?style=flat-square" alt="fuzzer escapes 0"></a>
-<a href="docs/ARCHITECTURE.md"><img src="https://img.shields.io/badge/crypto-Ed25519%20%2B%20RFC%208785-6f42c1?style=flat-square" alt="Ed25519 + RFC 8785"></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license"></a>
+<a href="docs/ARCHITECTURE.md"><img src="https://img.shields.io/badge/crypto-Ed25519%20%2B%20RFC%208785-0B74C4?style=flat-square" alt="Ed25519 + RFC 8785"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0B74C4?style=flat-square" alt="MIT license"></a>
 </p>
 
 <p>
