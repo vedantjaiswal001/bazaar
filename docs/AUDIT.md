@@ -38,7 +38,7 @@ from executed output or a cited code line.
 external secrets is #17, and the README already frames it as "reproduce with your
 own keys."
 
-## Honest caveats (limits a skeptical judge could still press)
+## Honest caveats (limits)
 
 1. **Same generator, different seed.** The held-out set uses fresh keys and unseen
    instances, but the *same* synthetic generators. It tests instance/signature
