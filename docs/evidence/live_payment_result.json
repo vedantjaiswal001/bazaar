@@ -1,0 +1,11 @@
+{
+  "order_id": "order_TVwcWkTN98sMR2",
+  "payment_id": "pay_TVwggKBvnNBCoR",
+  "amount": 412475,
+  "currency": "INR",
+  "status": "settled",
+  "captured": true,
+  "double_charge_attempt": "refused (already settled)",
+  "key_id": "rzp_test_TT76lDsaeFcSFj",
+  "settled_at": "2026-08-30T10:19:37.882196+00:00"
+}
