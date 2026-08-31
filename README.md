@@ -130,7 +130,7 @@ BAZAAR doesn't only defend its own mandates; it accepts a real, agent-standard p
 
 ## Two-sided price integrity: merchant-as-signer
 
-The merchant signs the price it will honour (Ed25519). The gate then authorises against that **merchant-signed** price, so a purchase is a two-sided handshake: the buyer signs what they authorise, the merchant signs what it will charge, and both must agree. Tamper either side and a signature check fails, not just a value comparison. See [`backend/bazaar/catalog/attestation.py`](backend/bazaar/catalog/attestation.py).
+Both sides of a purchase are signed. The buyer's mandate is issuer-signed and issuer-pinned; the merchant signs a price attestation (Ed25519) over the price it will honour, verified against a trusted merchant key. When it verifies, the gate authorises against that merchant-signed price and the receipt is marked dual-signed. The gate then enforces that the authorised amount equals the merchant-of-record price and stays within the signed cap, so tampering the mandate fails its issuer-pinned signature (`MANDATE_IMMUTABLE`) and tampering the price fails the gate's price check (`PRICE_MISMATCH_MERCHANT_RECORD`). Price integrity is signed on both sides, and the gate, not a bare value guess, is what enforces it. See [`backend/bazaar/catalog/attestation.py`](backend/bazaar/catalog/attestation.py).
 
 ## Try it in 60 seconds
 
@@ -180,7 +180,7 @@ make web     # the console on :5173       (terminal 2)  ->  open http://localhos
 5. **Trust Receipt + Hash-Chained Audit Log** - every authorization emits a signed receipt; each log entry chains the previous entry's hash, making the whole log tamper-evident without a blockchain.
 6. **Red-Team Harness + Benchmark** - an adversarial agent attacks the live gate across nine classes; a property-based fuzzer attacks the core invariant; the benchmark measures block rates, false-block rate, and honest escapes.
 7. **AP2 Rail Adapter** - verifies a real ES256 Cart Mandate (Google's Agent Payments Protocol) and maps it into the canonical Mandate + transaction, so a genuine AI buyer can transact through the same untouched gate (`backend/bazaar/adapters/ap2.py`).
-8. **Calibrated Risk Brain + Merchant-as-Signer** - a calibrated advisory classifier (recall 1.00 at zero false positives, interpretable weights) and Ed25519 merchant price attestations that make price integrity a two-sided, tamper-evident handshake.
+8. **Calibrated Risk Brain + Merchant-as-Signer** - a calibrated advisory classifier (recall 1.00 at zero false positives, interpretable weights) and Ed25519 merchant price attestations, so both the buyer's cap and the merchant's price are signed and the gate enforces the authorised amount against the merchant-of-record price.
 
 ## The boundary that must not blur
 
@@ -220,4 +220,4 @@ A strong submission names what it does *not* solve. BAZAAR deliberately does not
 
 MIT, see [`LICENSE`](LICENSE).
 
-Built by **Vedant Jaiswal**
+Built by **Vedant Jaiswal** for the Razorpay AI Buildathon 2026.

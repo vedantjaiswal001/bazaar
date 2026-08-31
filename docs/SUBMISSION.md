@@ -25,7 +25,7 @@ audit trail and one failure handled gracefully."*
 ## Beyond the bar: sellable to a real AI buyer, two-sided integrity
 
 - **AP2 rail.** BAZAAR verifies a real **ES256 Cart Mandate** (Google's Agent Payments Protocol) - registered signer, unexpired, self-consistent - then settles it through the *same* untouched gate. `make ap2`: **1/1** legit clears, **5/5** tampers caught (price / over-budget at the money gate; expired / signature / rogue-signer at AP2 verification, before the gate). This is the Track's *"make a merchant transactable by an AI buyer end to end,"* with a genuine protocol.
-- **Merchant-as-signer.** The merchant signs the price it will honour (Ed25519); the gate authorises against that signed price, so price integrity is a two-sided handshake - tamper either side and a signature check fails, not just a value comparison.
+- **Merchant-as-signer.** The merchant signs a price attestation (Ed25519) over the price it will honour; when it verifies, the gate authorises against that merchant-signed price and marks the receipt dual-signed. Both sides are signed - the buyer's issuer-pinned mandate and the merchant's price - and the gate enforces the authorised amount against the merchant-of-record price, so tampering the mandate fails its signature (`MANDATE_IMMUTABLE`) and tampering the price fails the gate's price check (`PRICE_MISMATCH_MERCHANT_RECORD`).
 
 ## Prove every claim - the commands
 

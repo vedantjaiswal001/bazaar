@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 -- ---------------------------------------------------------------------------
 -- Append-only, hash-chained audit log. Each entry commits to the previous
 -- entry's hash, making the whole log tamper-evident WITHOUT a blockchain.
--- entry_hash = SHA-256( prev_hash || JCS(payload) ).  seq is monotonic.
+-- entry_hash = SHA-256( prev_hash || event_type || 0x1F || JCS(payload) ).  seq is monotonic.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit_logs (
     seq          INTEGER PRIMARY KEY AUTOINCREMENT,
