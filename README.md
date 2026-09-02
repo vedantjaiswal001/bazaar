@@ -8,6 +8,7 @@
 
 <p>
 <a href="https://razorpay.com/"><img src="https://img.shields.io/badge/Razorpay%20AI%20Buildathon%202026-Track%2001-0B74C4?style=flat-square" alt="Razorpay AI Buildathon 2026 Track 01"></a>
+<a href="https://github.com/vedantjaiswal001/bazaar/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/vedantjaiswal001/bazaar/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
 <a href="tests/"><img src="https://img.shields.io/badge/tests-93%20passing-2ea44f?style=flat-square" alt="93 tests passing"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/adversarial%20block-100%25-2ea44f?style=flat-square" alt="adversarial block 100%"></a>
 <a href="docs/EVAL.md"><img src="https://img.shields.io/badge/false--block-0%25-2ea44f?style=flat-square" alt="false-block 0%"></a>
@@ -218,6 +219,7 @@ bazaar/
 ## Honesty rules this repo holds itself to
 
 - **No fabricated results, ever.** Numbers come from commands that actually ran. Anything not yet run reads `UNVERIFIED`.
+- **Continuous proof, not a one-time claim.** Every push reruns the full suite, the benchmark, the AP2 rail, and the fuzzer on a clean machine via GitHub Actions; the CI badge above is green only when all 93 tests pass, the benchmark reports zero escapes, and the fuzzer finds zero violations.
 - **Reason codes, not vibes.** Every block returns a machine-readable code, and every metric is reproducible from a seed.
 - **The unflattering number gets reported too.** The risk model's recall is shown next to its precision, and its out-of-distribution recall (0.63) is shown next to its clean-set recall (1.00).
 - **Secrets never in git.** `.env` is git-ignored; `.env.example` shows the shape.

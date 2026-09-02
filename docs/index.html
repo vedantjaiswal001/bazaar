@@ -155,6 +155,17 @@
   .kv .k { color: var(--muted); }
   .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
+  /* deterministic-vs-LLM comparison */
+  .cmp-scroll { overflow-x: auto; margin-top: 10px; }
+  .cmp { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-width: 520px; }
+  .cmp > div { background: #FFFFFF; padding: 9px 13px; font-size: 12.5px; }
+  .cmp .h { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--faint); }
+  .cmp .h.bad { color: var(--block); } .cmp .h.ok { color: var(--allow); }
+  .cmp .a { color: var(--muted); }
+  .cmp .v { font-family: var(--mono); color: var(--faint); }
+  .cmp .v.ok { color: var(--allow); font-weight: 600; }
+
   .pill { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: var(--mono); letter-spacing: .6px; }
   .pill.allow  { background: #E4F6ED;  color: var(--allow);  box-shadow: inset 0 0 0 1px #B7E6CB; }
   .pill.block  { background: #FCECEE;  color: var(--block);  box-shadow: inset 0 0 0 1px #F1C6CC; }
@@ -284,6 +295,20 @@
       <h2>The deterministic authorization gate</h2>
       <p class="sub">A fixed checklist. All checks pass → ALLOW. Any check fails → BLOCK with exactly one machine-readable reason code - never "the AI decided no."</p>
       <div id="verifierOut"><p class="muted">Run a purchase or fire an attack to populate the checklist.</p></div>
+      <label class="fld" style="margin-top:22px">Why a fixed checklist, not an LLM judge</label>
+      <p class="sub">The alternative design is to ask a model "should this payment go through" on every transaction. BAZAAR rejects it: the thing guarding money has to be reproducible, bounded, and immune to the same prompt injection the agent faces. That is exactly Track 01's bar - explainable, bounded, gated.</p>
+      <div class="cmp-scroll">
+        <div class="cmp">
+          <div class="h">On every decision</div><div class="h bad">LLM-as-judge</div><div class="h ok">This gate</div>
+          <div class="a">Same input, same verdict</div><div class="v">no, sampling drift</div><div class="v ok">yes, a pure function</div>
+          <div class="a">Why it decided</div><div class="v">prose you must trust</div><div class="v ok">one of 9 reason codes</div>
+          <div class="a">Injected text can flip it</div><div class="v">yes, open problem</div><div class="v ok">no, text is data</div>
+          <div class="a">Can exceed the signed cap</div><div class="v">prompt-bounded only</div><div class="v ok">never, crypto invariant</div>
+          <div class="a">Cost per decision</div><div class="v">100s of ms, network</div><div class="v ok">~0.13 ms, in-process</div>
+          <div class="a">Audit</div><div class="v">stochastic, unprovable</div><div class="v ok">replay the hash chain</div>
+        </div>
+      </div>
+      <p class="small faint" style="margin-top:10px">The advisory model still runs, it just is not the boundary: it can only tighten an ALLOW to a human-review hold, never widen authority.</p>
     </div>
   </section>
 
@@ -312,7 +337,23 @@
       <h2>Benchmark scoreboard</h2>
       <p class="sub">Every number here is produced by <code>make benchmark</code> in the repo. The deterministic gate is correct/incorrect (block rates); only the advisory risk model earns precision/recall - kept separate.</p>
       <div id="benchOut"></div>
-      <p class="sub" style="margin-top:14px">Measured separately by <code>make latency</code>: one full authorization through the 11-check gate takes about <b>0.13 ms</b> at p50 and stays sub-millisecond at p99, roughly 7,000 per second on one core. A fixed checklist, not an LLM round-trip, so the same input returns the same reason code every time.</p>
+      <p class="sub" style="margin-top:14px">Measured separately by <code>make latency</code>: one full authorization through the 11-check gate (including the Ed25519 mandate verify) takes about <b>0.13 ms</b> at p50, <b>0.20 ms</b> at p95, and <b>0.26 ms</b> at p99, roughly <b>7,000</b> per second on one core. A fixed checklist, not an LLM round-trip, so the same input returns the same reason code every time.</p>
+      <p class="small faint" style="margin-top:10px">Honesty note: the advisory risk model above scores 1.00 on this separable synthetic set, but under a different generator its recall drops to <b>0.63</b> while the deterministic gate still blocks <b>100%</b>. The model is not the security boundary; the verifier is.</p>
+
+      <label class="fld" style="margin-top:24px">AP2 rail conformance - real ES256 Cart Mandates (<code>make ap2</code>)</label>
+      <p class="sub">A buyer's credential provider signs a Google AP2 Cart Mandate; BAZAAR verifies its authenticity (registered signer, unexpired, self-consistent), then settles it through the same untouched gate. Authenticity is AP2's job, money is the gate's.</p>
+      <div class="grid two">
+        <div class="stat"><div class="cap">Legit carts cleared</div><div class="bignum good">1 / 1</div><div class="small muted">a real signed cart at the merchant-of-record price</div></div>
+        <div class="stat"><div class="cap">Tampers caught</div><div class="bignum good">5 / 5</div><div class="small muted">price · budget · expiry · signature · rogue signer</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="kv"><span class="k">legit cart</span><span class="mono">money gate · ALLOW</span></div>
+        <div class="kv"><span class="k">price tamper</span><span class="mono">money gate · PRICE_MISMATCH_MERCHANT_RECORD</span></div>
+        <div class="kv"><span class="k">over budget</span><span class="mono">money gate · MANDATE_LIMIT_EXCEEDED</span></div>
+        <div class="kv"><span class="k">expired cart</span><span class="mono">AP2 auth · AP2_EXPIRED</span></div>
+        <div class="kv"><span class="k">signature tamper</span><span class="mono">AP2 auth · AP2_INVALID_SIGNATURE</span></div>
+        <div class="kv"><span class="k">untrusted issuer</span><span class="mono">AP2 auth · AP2_UNTRUSTED_ISSUER</span></div>
+      </div>
     </div>
   </section>
 
