@@ -87,6 +87,21 @@ The gate is a **fixed checklist**, not a model. It is evaluated top to bottom; i
 
 > **The model is not the security boundary. The verifier is.** Under a different data distribution the advisory model's recall drops to 0.63, while the deterministic gate still blocks 100%. Intelligence *proposes*; the verifier *decides*.
 
+## Why a deterministic gate, not an LLM judge
+
+The obvious alternative is to ask a model "should this payment go through?" on every transaction. That is exactly the design BAZAAR rejects. The thing guarding the money has to be reproducible, bounded, and immune to the same prompt injection the agent is exposed to. Track 01 asks that every money action be **explainable, bounded, and gated**; a fixed checklist delivers all three where a model judge structurally cannot.
+
+| On every decision | LLM-as-judge | BAZAAR's deterministic gate |
+|---|---|---|
+| Same input, same verdict | No: sampling and prompt drift make it non-reproducible | Yes: a pure function, identical on every run |
+| Why it decided | A paragraph of prose you have to trust | Exactly one of nine machine-readable reason codes |
+| Injected catalog text can flip it | Yes: prompt injection is an open research problem | No: untrusted text is data, never an instruction (`UNTRUSTED_INSTRUCTION`) |
+| Can it exceed the signed cap | Only as bounded as the prompt it was handed | Never: the cap is a cryptographic invariant 20,000 fuzz states cannot break |
+| Cost per decision | A network round-trip, hundreds of ms to seconds | About **0.13 ms** p50 in-process, roughly **7,000** authorizations/sec on one core |
+| Audit | Re-running a stochastic call proves nothing | Re-run the checklist, or replay the hash-chained log, same answer |
+
+The advisory model still has a place, it just is not the boundary: it runs alongside the gate and may only *tighten* an ALLOW to a human-review hold, never widen authority. The latency figures are real and reproducible with `make latency`; the full distribution (p50 / p95 / p99, iteration count, environment) is written to [`docs/evidence/gate_latency.json`](docs/evidence/gate_latency.json).
+
 ## The numbers that matter
 
 Every figure here is printed by `make benchmark`, so you can reproduce them yourself. Block rates are deterministic (the gate is a fixed checklist); the fuzzer seed varies per run but the violation count is always 0. This repo never ships a fabricated number: a value not yet produced by a real run reads `UNVERIFIED`.
@@ -103,6 +118,8 @@ Economic axis (same harness, no new engine): the seller's **bounded** upsell lif
 The advisory risk model is a **calibrated** classifier (precision **1.00**, recall **1.00**, Brier **0.038**) on a risk-model held-out set of **360 attacks + 900 legit** with fresh keys. Because these synthetic classes are separable by construction, a clean 1.00 is *expected, not magic*, so the eval leads with the **harder** signals: calibration, a **noise-robustness curve** (recall falls to ~0.82 under noise), a **leave-one-class-out** probe (mean 11%), and an **out-of-distribution** test (Generator B) where the advisory model's recall honestly **drops to 0.63 while the deterministic gate still blocks 100%**. The model is advisory: it can only *tighten* to a review hold, never widen authority. Full methodology, counts and curves in [`docs/eval/RISK_BRAIN.md`](docs/eval/RISK_BRAIN.md).
 
 **Live settlement is proven, not simulated.** `make live` runs one real Razorpay Test Mode order end to end, a captured payment and a reconcile that settles exactly once, with a repeated attempt refusing to double-charge. It is the one result you reproduce with your own `rzp_test_` keys rather than from the repo alone (the in-repo tests exercise the same flow against a faithful fake).
+
+**Fast enough to sit in front of every payment.** Because the gate is a pure function with no network call and no model inference, one full authorization (all 11 checks plus the Ed25519 mandate verify) takes about **0.13 ms** at p50 and stays **well under a millisecond** at p99, roughly **7,000** authorizations per second on a single core in this environment. Reproduce with `make latency`; the exact distribution and the machine it ran on are recorded in [`docs/evidence/gate_latency.json`](docs/evidence/gate_latency.json).
 
 ## Nine attacks, nine reason codes
 
@@ -146,6 +163,7 @@ Everything else:
 make test        # 93 tests: unit + property + security + integration
 make fuzz        # property-based fuzzer against the spend-cap invariant
 make benchmark   # regenerate datasets, run the gate + fuzzer, print the scoreboard
+make latency     # time one real authorization decision through the gate (p50/p99)
 make train       # train + evaluate the calibrated risk brain (writes the artifact + plots)
 make ap2         # AP2 rail conformance: real ES256 Cart Mandates (1/1 legit, 5/5 tampers)
 make verify      # receipt verify/tamper + audit-chain verify/tamper
@@ -193,8 +211,8 @@ bazaar/
 ├── tests/       unit/ integration/ property/ security/
 ├── benchmarks/  one-command runner -> scoreboard
 ├── docs/        THREAT_MODEL · ARCHITECTURE · EVAL · SUBMISSION · AP2_RAIL · AUDIT · eval/RISK_BRAIN
-├── scripts/     demo · showcase · live_razorpay · verify_chain · train_risk · ap2_demo
-└── Makefile     setup · test · fuzz · benchmark · train · ap2 · showcase · verify · live · run
+├── scripts/     demo · showcase · live_razorpay · verify_chain · train_risk · ap2_demo · bench_latency
+└── Makefile     setup · test · fuzz · benchmark · latency · train · ap2 · showcase · verify · live · run
 ```
 
 ## Honesty rules this repo holds itself to

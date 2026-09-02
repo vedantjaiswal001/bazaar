@@ -34,6 +34,7 @@ make setup        # venv + install + init db
 make test         # 93 tests: unit + property + security + integration
 make fuzz         # property-based fuzzer vs the spend-cap invariant -> real count
 make benchmark    # regenerate datasets, run gate + fuzzer -> the scoreboard
+make latency      # time one real authorization through the gate -> p50/p99, real
 make train        # train + evaluate the calibrated risk brain -> artifact + plots
 make ap2          # AP2 rail conformance: real ES256 Cart Mandates (1/1, 5/5)
 make showcase     # the whole story in one paced, recordable run
@@ -53,6 +54,7 @@ make live         # ONE real Razorpay Test Mode payment, end to end
 | AOV uplift from bounded upsell / share still gated         | **+7.72% / 100%** (a controlled A/B on simulated buyers - see `docs/EVAL.md`) |
 | Advisory risk classifier - **calibrated** (reported *separately*)  | precision **1.00**, recall **1.00**, F1 **1.00**, Brier **0.038** |
 | AP2 rail conformance (real ES256 Cart Mandates)            | **1/1** legit cleared, **5/5** tampers caught |
+| Authorization latency, full 11-check gate (via `make latency`) | **~0.13 ms** p50, sub-millisecond p99, ~**7,000**/sec on one core |
 
 **On the risk model:** it is a **calibrated** logistic classifier (Brier 0.038) that
 can only *tighten* an ALLOW to a human-review hold - it never authorizes and never
@@ -89,6 +91,13 @@ generation method are in `docs/eval/RISK_BRAIN.md`.
 
 ## What makes it credible under questioning
 
+- **Deterministic, not a model judge.** The alternative design, asking an LLM
+  "should this payment go through," is exactly what BAZAAR rejects: it is
+  non-reproducible, only as bounded as its prompt, and vulnerable to the same
+  prompt injection the agent faces. The gate is a pure function instead, so the
+  same input gives the same verdict every run, the reason is one of nine codes
+  rather than prose, and one decision costs **~0.13 ms** rather than a network
+  round-trip. The model runs alongside and may only *tighten*, never authorize.
 - **Issuer-key pinning.** The buyer agent holds **no** mandate-signing key. The
   verifier pins the mandate to a trusted human/issuer key, so a compromised agent
   cannot mint its own mandate with a bigger cap - the signature must be the

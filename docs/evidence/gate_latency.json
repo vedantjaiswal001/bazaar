@@ -1,0 +1,20 @@
+{
+  "measured_at": "2026-09-02T07:59:20Z",
+  "path": "ALLOW (all 11 checks + Ed25519 verify + issuer-key pin)",
+  "iterations": 50000,
+  "warmup_iterations": 5000,
+  "mean_us": 111.503,
+  "p50_us": 102.5,
+  "p95_us": 172.4,
+  "p99_us": 293.2,
+  "p999_us": 383.8,
+  "min_us": 99.7,
+  "max_us": 767.0,
+  "throughput_calls_per_sec": 8950.0,
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "note": "measured in the project sandbox/CI, not on Razorpay hardware; the claim is one of orders of magnitude, reproduce with `make latency`"
+  }
+}

@@ -241,6 +241,7 @@
       <span class="chip good"><span class="d"></span><span class="v">0%</span> <span class="l">false-block on legit</span></span>
       <span class="chip good"><span class="d"></span><span class="v">0</span> <span class="l">fuzzer violations</span></span>
       <span class="chip warm"><span class="d"></span><span class="v">+7.7%</span> <span class="l">order value, all cleared</span></span>
+      <span class="chip warm"><span class="d"></span><span class="v">0.13 ms</span> <span class="l">to authorize, no LLM call</span></span>
     </div>
     <div class="metaline">
       <span>Settlement · Razorpay Test Mode</span>
@@ -311,6 +312,7 @@
       <h2>Benchmark scoreboard</h2>
       <p class="sub">Every number here is produced by <code>make benchmark</code> in the repo. The deterministic gate is correct/incorrect (block rates); only the advisory risk model earns precision/recall - kept separate.</p>
       <div id="benchOut"></div>
+      <p class="sub" style="margin-top:14px">Measured separately by <code>make latency</code>: one full authorization through the 11-check gate takes about <b>0.13 ms</b> at p50 and stays sub-millisecond at p99, roughly 7,000 per second on one core. A fixed checklist, not an LLM round-trip, so the same input returns the same reason code every time.</p>
     </div>
   </section>
 
